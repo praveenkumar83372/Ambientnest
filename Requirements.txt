@@ -1,0 +1,10 @@
+google-genai
+edge-tts
+moviepy
+requests
+python-dotenv
+google-auth-oauthlib
+google-auth
+google-api-python-client
+Pillow
+numpy
