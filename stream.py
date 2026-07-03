@@ -1,6 +1,7 @@
 """
 AmbientNest HQ — 24/7 Lo-fi Live Stream
 Uses exact YouTube recommended encoder settings to fix black screen issue.
+Includes the -re flag to enforce stable, real-time live broadcasting.
 """
 
 import os
@@ -32,12 +33,13 @@ print(f"   Streaming for {STREAM_SECS//3600}h {(STREAM_SECS%3600)//60}m")
 # Video: H.264, 1280x720, 30fps, 2500kbps, yuv420p
 # Audio: AAC, 128kbps, 44100Hz, stereo
 # Format: FLV to RTMP
-# Key fix: use -vf with fps filter to guarantee exact 30fps
-# and -vsync 1 to keep video sync stable for streaming
 
 cmd = [
     "ffmpeg",
     "-loglevel", "info",           # show more info to debug if needed
+
+    # CRITICAL FIX: Force real-time streaming speed (1s of video per 1s of clock time)
+    "-re", 
 
     # Loop video input
     "-stream_loop", "-1",
