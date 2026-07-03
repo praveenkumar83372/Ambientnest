@@ -82,7 +82,7 @@ def _clean_tags(tags):
 def update_live_broadcast_metadata():
     """Find the active live broadcast and update its title, description, tags."""
     if not os.path.exists("token.pickle"):
-        print("⚠️  token.pickle not found — skipping metadata update.")
+        print("⚠️   token.pickle not found — skipping metadata update.")
         return
 
     with open("token.pickle", "rb") as f:
@@ -92,29 +92,21 @@ def update_live_broadcast_metadata():
     title, description, tags = get_stream_metadata()
 
     try:
-        # Find active/upcoming broadcasts
+        # UPDATED: Use broadcastStatus="all" to reliably target the persistent panel stream reference
         broadcasts = youtube.liveBroadcasts().list(
             part="id,snippet,status",
-            broadcastStatus="active",
-            maxResults=1,
+            broadcastStatus="all",
+            maxResults=5,
         ).execute()
 
         items = broadcasts.get("items", [])
 
-        # If no active broadcast, check upcoming
         if not items:
-            broadcasts = youtube.liveBroadcasts().list(
-                part="id,snippet,status",
-                broadcastStatus="upcoming",
-                maxResults=1,
-            ).execute()
-            items = broadcasts.get("items", [])
-
-        if not items:
-            print("⚠️  No active or upcoming broadcast found to update.")
+            print("⚠️   No active or upcoming broadcast found to update.")
             print(f"   Stream title would be: {title}")
             return
 
+        # Target the primary streaming frame entry
         broadcast_id = items[0]["id"]
 
         # Update the broadcast metadata
@@ -144,11 +136,11 @@ def update_live_broadcast_metadata():
             },
         ).execute()
 
-        print(f"✅ Live broadcast metadata updated!")
+        print(f"✅ Live broadcast metadata updated! ID: {broadcast_id}")
         print(f"   Title: {title}")
 
     except Exception as e:
-        print(f"⚠️  Metadata update failed: {e}")
+        print(f"⚠️   Metadata update failed: {e}")
         print("   Stream will continue — just without updated title.")
 
 

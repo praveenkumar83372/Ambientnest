@@ -35,6 +35,10 @@ jobs:
         run: |
           echo "${{ secrets.TOKEN_PICKLE_B64 }}" | base64 -d > token.pickle
 
+      # FIXED: Added the missing dash '-' and aligned the block properly
+      - name: Update YouTube Stream Metadata
+        run: python stream_meta.py
+
       - name: Start lo-fi stream
         env:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}

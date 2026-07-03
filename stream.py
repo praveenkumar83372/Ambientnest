@@ -1,9 +1,3 @@
-"""
-AmbientNest HQ — 24/7 Lo-fi Live Stream
-Uses exact YouTube recommended encoder settings to fix black screen issue.
-Includes the -re flag and correct flag placement for endless looping.
-"""
-
 import os
 import sys
 import subprocess
@@ -12,7 +6,8 @@ STREAM_KEY  = os.environ.get("YOUTUBE_STREAM_KEY")
 RTMP_URL    = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 VIDEO_FILE  = "cat on window.mp4"
 AUDIO_FILE  = "pulsebox-lofi.mp3"
-STREAM_SECS = int(5.75 * 3600)
+# CHANGED: 5.4 hours (5h 24m) to completely avoid overlapping stream key collisions
+STREAM_SECS = int(5.4 * 3600) 
 
 if not STREAM_KEY:
     print("❌ YOUTUBE_STREAM_KEY not set.")
@@ -29,30 +24,17 @@ if not os.path.exists(AUDIO_FILE):
 print("🎬 AmbientNest HQ — 24/7 Lo-fi Stream starting...")
 print(f"   Streaming for {STREAM_SECS//3600}h {(STREAM_SECS%3600)//60}m")
 
-# YouTube exact recommended settings:
-# Video: H.264, 1280x720, 30fps, 2500kbps, yuv420p
-# Audio: AAC, 128kbps, 44100Hz, stereo
-# Format: FLV to RTMP
-
 cmd = [
     "ffmpeg",
     "-loglevel", "info",
-
-    # 1. Video Input Configuration (Loop & Read-rate MUST precede -i)
     "-stream_loop", "-1",
     "-re",
     "-i", VIDEO_FILE,
-
-    # 2. Audio Input Configuration (Loop & Read-rate MUST precede -i)
     "-stream_loop", "-1",
     "-re",
     "-i", AUDIO_FILE,
-
-    # 3. Total Session Duration (Forces the script to run for 5h 45m)
     "-t", str(STREAM_SECS),
-
-    # Video settings — exact YouTube spec
-    "-vf", "scale=1280:720,fps=30",  # force exact 30fps
+    "-vf", "scale=1280:720,fps=30",
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-b:v", "2500k",
@@ -60,29 +42,23 @@ cmd = [
     "-maxrate", "2500k",
     "-bufsize", "5000k",
     "-pix_fmt", "yuv420p",
-    "-g", "60",                    # keyframe every 2s (required by YouTube)
+    "-g", "60",
     "-keyint_min", "60",
-    "-sc_threshold", "0",          # disable scene detection for stable keyframes
+    "-sc_threshold", "0",
     "-r", "30",
-    "-vsync", "1",                 # keep video sync stable
-
-    # Audio settings
+    "-vsync", "1",
     "-c:a", "aac",
     "-b:a", "128k",
     "-ar", "44100",
     "-ac", "2",
-
-    # Map video from file 0, audio from file 1
     "-map", "0:v:0",
     "-map", "1:a:0",
-
-    # Output
     "-f", "flv",
-    "-flvflags", "no_duration_filesize",  # required for live streaming
+    "-flvflags", "no_duration_filesize",
     RTMP_URL,
 ]
 
-print("▶  Connecting to YouTube RTMP...")
+print("▶   Connecting to YouTube RTMP...")
 try:
     subprocess.run(cmd, check=True)
     print("✅ Session complete — next cron job takes over.")
@@ -90,4 +66,4 @@ except subprocess.CalledProcessError as e:
     print(f"❌ ffmpeg error: {e}")
     sys.exit(1)
 except KeyboardInterrupt:
-    print("⏹  Stopped manually.")
+    print("⏹   Stopped manually.")
