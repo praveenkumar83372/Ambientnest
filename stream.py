@@ -42,13 +42,14 @@ update_live_broadcast_metadata()
 # ── ffmpeg stream command ─────────────────────────────────────────────────────
 cmd = [
     "ffmpeg",
-    "-loglevel", "warning",       # suppress verbose frame logs
-    "-re",                         # read at native speed (required for streaming)
-    "-stream_loop", "-1",          # loop video forever
+    "-loglevel", "warning",
+    # Loop both inputs infinitely BEFORE reading — guarantees no early stop
+    "-stream_loop", "-1",
+    "-re",
     "-i", VIDEO_FILE,
-    "-stream_loop", "-1",          # loop audio forever
+    "-stream_loop", "-1",
     "-i", AUDIO_FILE,
-    "-t", str(STREAM_SECS),        # auto-stop after session duration
+    "-t", str(STREAM_SECS),
 
     # Video: 1280x720, 30fps, h264, 2500kbps
     "-vf", "scale=1280:720",
