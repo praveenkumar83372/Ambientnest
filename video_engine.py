@@ -24,9 +24,9 @@ load_dotenv()
 FREESOUND_API_KEY = os.environ.get("FREESOUND_API_KEY")
 PEXELS_API_KEY   = os.environ.get("PEXELS_API_KEY")
 
-CLIP_CUT_DURATION = 6.5   # seconds per visual cut
+CLIP_CUT_DURATION = 8.0   # seconds per visual cut (fewer clips = less RAM)
 TARGET_FPS        = 24
-OUTPUT_SIZE       = (1280, 720)
+OUTPUT_SIZE       = (854, 480)  # lower res = half the RAM of 720p on free runners
 
 
 # ── Color grading ─────────────────────────────────────────────────────────────
@@ -306,11 +306,12 @@ def assemble_documentary(segments, video_theme, content_type="history", visual_s
                 try:
                     print(f"     ⬇️  Clip {j+1}/{len(clip_urls)}...")
                     _download_video(vurl, clip_path)
-                    vc = VideoFileClip(clip_path).resized(OUTPUT_SIZE)
+                    raw_vc = VideoFileClip(clip_path)
+                    vc = raw_vc.resized(OUTPUT_SIZE)
                     remaining = audio_dur - accumulated
                     cut_dur = min(CLIP_CUT_DURATION, remaining, vc.duration)
                     if cut_dur <= 0.1:
-                        vc.close(); break
+                        raw_vc.close(); vc.close(); break
                     vc = vc.subclipped(0, cut_dur)
                     # Record cut times (start of each new clip = a cut point)
                     if segment_clips:   # don't record very first clip as a "cut"
@@ -381,7 +382,8 @@ def assemble_documentary(segments, video_theme, content_type="history", visual_s
         print(f"\n🚀 Rendering {total_dur/60:.1f}-min video...")
         full_doc.write_videofile(
             output_path, fps=TARGET_FPS, codec="libx264",
-            audio_codec="aac", threads=4, preset="fast",
+            audio_codec="aac", threads=2, preset="ultrafast",
+            logger=None,
         )
         return output_path
 

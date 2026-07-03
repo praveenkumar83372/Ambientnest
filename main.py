@@ -35,10 +35,10 @@ def generate_script(slot_content):
 
     if thin:
         decision = f'content_type = "story". Build a compelling, detailed video about: "{fallback}"'
-        target   = "5-6 minutes total narration → 8-11 segments"
+        target   = "4-5 minutes total narration → 6-8 segments"
     else:
         decision = 'content_type = "news". Build an engaging real-time briefing from the news above.'
-        target   = "8-10 minutes total narration → 12-16 segments"
+        target   = "6-8 minutes total narration → 9-12 segments"
 
     prompt = f"""
     You are the creative director of AmbientNest HQ — a YouTube channel covering
