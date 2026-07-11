@@ -92,7 +92,7 @@ def update_live_broadcast_metadata():
     title, description, tags = get_stream_metadata()
 
     try:
-        # UPDATED: Use broadcastStatus="all" to reliably target the persistent panel stream reference
+        # Use broadcastStatus="all" to capture the broadcast dashboard entry frame safely
         broadcasts = youtube.liveBroadcasts().list(
             part="id,snippet,status",
             broadcastStatus="all",
@@ -106,7 +106,6 @@ def update_live_broadcast_metadata():
             print(f"   Stream title would be: {title}")
             return
 
-        # Target the primary streaming frame entry
         broadcast_id = items[0]["id"]
 
         # Update the broadcast metadata

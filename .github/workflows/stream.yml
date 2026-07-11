@@ -14,7 +14,7 @@ on:
 jobs:
   stream:
     runs-on: ubuntu-latest
-    timeout-minutes: 360   # 6h hard GitHub limit — stream stops at 5h45m naturally
+    timeout-minutes: 360   # 6h hard GitHub limit
 
     steps:
       - name: Checkout repo
@@ -35,7 +35,6 @@ jobs:
         run: |
           echo "${{ secrets.TOKEN_PICKLE_B64 }}" | base64 -d > token.pickle
 
-      # FIXED: Added the missing dash '-' and aligned the block properly
       - name: Update YouTube Stream Metadata
         run: python stream_meta.py
 
