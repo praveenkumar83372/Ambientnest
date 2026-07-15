@@ -1,0 +1,48 @@
+{
+  "day_count": 1,
+  "location": {
+    "city": "Kamakura",
+    "lat": 35.3192,
+    "lon": 139.5467,
+    "note": "Small coastal town, mountains + sea + old temples. Good visual variety for a slow-life character."
+  },
+  "hana": {
+    "age": 19,
+    "home": "small wooden house near the hill, lives alone",
+    "personality": "gentle, a little clumsy, quietly determined, talks to herself and to objects",
+    "speech_style": "English narration with natural Japanese words mixed in (hai, ne, arigatou, ohayou, itadakimasu, etc.) — never full Japanese sentences, just seasoning"
+  },
+  "ongoing_projects": [
+    {
+      "name": "pottery",
+      "status": "just started, first attempts keep cracking in the kiln",
+      "days_in": 0
+    },
+    {
+      "name": "kyoto_savings",
+      "status": "0 of 50000 yen saved",
+      "yen_saved": 0,
+      "yen_goal": 50000,
+      "days_in": 0
+    },
+    {
+      "name": "grandmothers_miso_recipe",
+      "status": "trying to remember the ratio, tastes close but not right",
+      "days_in": 0
+    }
+  ],
+  "garden": {
+    "tomatoes": "seeds not planted yet",
+    "herbs": "not planted yet",
+    "morning_glories": "not planted yet"
+  },
+  "landmarks": {
+    "cherry_tree_on_the_hill": "bare branches, waiting for the visit"
+  },
+  "recent_events": [],
+  "emotional_state": "quiet and hopeful, a little nervous about starting something new",
+  "weather_yesterday": null,
+  "last_video_slot": null,
+  "pending_comment_threads": [],
+  "day_log_today": []
+}

@@ -1,6 +1,4 @@
-﻿.env
-token.pickle
-client_secrets.json
-__pycache__/
+output/
 *.pyc
-.ep_counter_series*
+__pycache__/
+.env
