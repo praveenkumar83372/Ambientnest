@@ -51,6 +51,9 @@ jobs:
       - name: Run Hana's World pipeline
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           if [ -n "${{ steps.slot.outputs.slot }}" ]; then

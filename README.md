@@ -22,9 +22,25 @@ hana_world.py        → orchestrates all of the above for one video run
 ## One-time setup
 
 1. **Secrets** (repo Settings → Secrets and variables → Actions):
-   - `GEMINI_API_KEY` — for story generation
+   - `GEMINI_API_KEY` — story generation, provider 1
+   - `GROQ_API_KEY` — story generation, provider 2 (fallback)
+   - `OPENROUTER_API_KEY` — story generation, provider 3 (fallback)
+   - `MISTRAL_API_KEY` — story generation, provider 4 (fallback)
    - `HF_TOKEN` — HuggingFace token with inference access to the image
      and video models referenced in `hana_animation.py`
+
+   You don't need all four story-generation keys — `hana_story.py` tries
+   them in order (Gemini → Groq → OpenRouter → Mistral by default) and
+   skips any that are missing or out of quota. Add as many as you can to
+   maximize the odds that at least one has quota left on a given day.
+   Order/selection is configurable via `HANA_TEXT_PROVIDERS`, e.g.
+   `HANA_TEXT_PROVIDERS=groq,gemini` to try Groq first.
+
+   Free signups:
+   - Gemini: https://aistudio.google.com/apikey
+   - Groq: https://console.groq.com/keys
+   - OpenRouter: https://openrouter.ai/keys
+   - Mistral: https://console.mistral.ai/api-keys
 
 2. **Character reference image** — drop a locked design for Hana at
    `assets/character/hana_ref.png`. This is what keeps her looking the

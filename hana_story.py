@@ -4,17 +4,31 @@ Turns (persistent state + real weather/season + daypart + optional viewer
 comment) into today's story: narration, a shot list for animation, sfx cues,
 and the state deltas to save afterward.
 
-Uses Gemini (as originally planned) via the google-generativeai SDK.
-Requires env var GEMINI_API_KEY.
+MULTI-PROVIDER FALLBACK: only 3 requests/day are needed, but free-tier quotas
+are small and unpredictable, so this tries a chain of free providers in order
+and falls through to the next one if a provider is missing its key, out of
+quota, or errors out. As long as ONE provider in the chain has quota left,
+the video still gets made.
+
+Providers (in default order): Gemini -> Groq -> OpenRouter -> Mistral
+Configure which ones run + their order via HANA_TEXT_PROVIDERS, e.g.:
+    HANA_TEXT_PROVIDERS=gemini,groq,mistral
+Each provider only activates if its API key env var is set; missing keys are
+skipped silently (not treated as failures).
+
+Env vars used:
+    GEMINI_API_KEY       -> Gemini
+    GROQ_API_KEY          -> Groq
+    OPENROUTER_API_KEY    -> OpenRouter
+    MISTRAL_API_KEY       -> Mistral
 """
 
 import json
 import os
 import re
+import sys
 
-import google.generativeai as genai
-
-MODEL_NAME = os.environ.get("HANA_TEXT_MODEL", "gemini-2.0-flash")
+import requests
 
 SYSTEM_PROMPT = """You are the story-writer for "Hana's World", a Studio Ghibli-style
 animated daily-life series about Hana, a 19-year-old girl living alone in a small
@@ -63,6 +77,10 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching this schema:
 """
 
 
+# ---------------------------------------------------------------------------
+# Prompt building (provider-agnostic)
+# ---------------------------------------------------------------------------
+
 def _build_user_prompt(state: dict, context: dict, slot: str, comment: dict | None) -> str:
     parts = [
         f"TODAY: {context['date']} ({context['weekday']}), {context['season']}, video slot = {slot}.",
@@ -98,27 +116,138 @@ def _extract_json(raw_text: str) -> dict:
     return json.loads(cleaned)
 
 
-def generate_story(state: dict, context: dict, slot: str, comment: dict | None = None) -> dict:
+# ---------------------------------------------------------------------------
+# Provider implementations
+# Each provider function takes (system_prompt, user_prompt) and returns raw
+# text from the model. Errors (missing key, quota, HTTP failure) raise —
+# the caller in generate_story() catches and moves to the next provider.
+# ---------------------------------------------------------------------------
+
+def _call_gemini(system_prompt: str, user_prompt: str) -> str:
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY is not set")
+        raise RuntimeError("GEMINI_API_KEY not set")
 
+    import google.generativeai as genai
+    model_name = os.environ.get("HANA_GEMINI_MODEL", "gemini-2.5-flash-lite")
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(MODEL_NAME, system_instruction=SYSTEM_PROMPT)
-
-    user_prompt = _build_user_prompt(state, context, slot, comment)
+    model = genai.GenerativeModel(model_name, system_instruction=system_prompt)
     response = model.generate_content(
         user_prompt,
         generation_config={"temperature": 0.9, "response_mime_type": "application/json"},
     )
+    return response.text
 
-    story = _extract_json(response.text)
-    story["slot"] = slot
-    return story
+
+def _call_openai_compatible(base_url: str, api_key: str, model: str,
+                             system_prompt: str, user_prompt: str,
+                             extra_headers: dict = None) -> str:
+    """Shared caller for any OpenAI-compatible chat completions endpoint
+    (Groq, OpenRouter, Mistral all implement this same shape)."""
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    if extra_headers:
+        headers.update(extra_headers)
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.9,
+        "response_format": {"type": "json_object"},
+    }
+    resp = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload, timeout=60)
+    if resp.status_code == 429:
+        raise RuntimeError(f"rate limited (429): {resp.text[:200]}")
+    resp.raise_for_status()
+    data = resp.json()
+    return data["choices"][0]["message"]["content"]
+
+
+def _call_groq(system_prompt: str, user_prompt: str) -> str:
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY not set")
+    model = os.environ.get("HANA_GROQ_MODEL", "llama-3.3-70b-versatile")
+    return _call_openai_compatible("https://api.groq.com/openai/v1", api_key, model,
+                                    system_prompt, user_prompt)
+
+
+def _call_openrouter(system_prompt: str, user_prompt: str) -> str:
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY not set")
+    # ":free" suffix models run on OpenRouter's free pool, separate quota from everything else here
+    model = os.environ.get("HANA_OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
+    return _call_openai_compatible(
+        "https://openrouter.ai/api/v1", api_key, model, system_prompt, user_prompt,
+        extra_headers={"HTTP-Referer": "https://github.com/", "X-Title": "Hana's World"},
+    )
+
+
+def _call_mistral(system_prompt: str, user_prompt: str) -> str:
+    api_key = os.environ.get("MISTRAL_API_KEY")
+    if not api_key:
+        raise RuntimeError("MISTRAL_API_KEY not set")
+    model = os.environ.get("HANA_MISTRAL_MODEL", "mistral-small-latest")
+    return _call_openai_compatible("https://api.mistral.ai/v1", api_key, model,
+                                    system_prompt, user_prompt)
+
+
+PROVIDERS = {
+    "gemini": _call_gemini,
+    "groq": _call_groq,
+    "openrouter": _call_openrouter,
+    "mistral": _call_mistral,
+}
+
+DEFAULT_PROVIDER_ORDER = ["gemini", "groq", "openrouter", "mistral"]
+
+
+def _provider_order() -> list[str]:
+    raw = os.environ.get("HANA_TEXT_PROVIDERS")
+    if not raw:
+        return DEFAULT_PROVIDER_ORDER
+    return [p.strip().lower() for p in raw.split(",") if p.strip()]
+
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+def generate_story(state: dict, context: dict, slot: str, comment: dict | None = None) -> dict:
+    user_prompt = _build_user_prompt(state, context, slot, comment)
+    order = _provider_order()
+
+    errors = []
+    for name in order:
+        call_fn = PROVIDERS.get(name)
+        if not call_fn:
+            print(f"[hana_story] Unknown provider '{name}', skipping", file=sys.stderr)
+            continue
+        try:
+            print(f"[hana_story] Trying provider: {name}")
+            raw_text = call_fn(SYSTEM_PROMPT, user_prompt)
+            story = _extract_json(raw_text)
+            story["slot"] = slot
+            story["_provider_used"] = name
+            print(f"[hana_story] Success with provider: {name}")
+            return story
+        except Exception as e:
+            msg = f"{name}: {e}"
+            print(f"[hana_story] Provider failed ({msg})", file=sys.stderr)
+            errors.append(msg)
+            continue
+
+    raise RuntimeError(
+        "All text providers failed or were unconfigured. Tried: "
+        f"{order}. Errors: {' | '.join(errors) if errors else 'no providers had keys set'}"
+    )
 
 
 if __name__ == "__main__":
-    # quick manual smoke test (requires GEMINI_API_KEY)
+    # quick manual smoke test — tries the full provider chain
     from hana_state import load_state
     from japan_data import get_context
 
