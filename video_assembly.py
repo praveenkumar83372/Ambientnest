@@ -19,7 +19,7 @@ try:
 except ImportError:
     HAS_PYSRT = False
 
-# MoviePy compatibility handler (Supports both MoviePy v1 and v2)
+# MoviePy compatibility handler
 try:
     from moviepy import (
         VideoFileClip, AudioFileClip, ImageClip, CompositeVideoClip, 
@@ -32,37 +32,6 @@ except ImportError:
         CompositeAudioClip, concatenate_videoclips, TextClip
     )
     MOVIEPY_V2 = False
-
-
-def download_background_music(mood="dark ambient", output_path="bg_music.mp3", freesound_api_key=None):
-    """Downloads dark ambient cinematic background music from Freesound API."""
-    if not freesound_api_key:
-        print("⚠️ FREESOUND_API_KEY missing. Skipping background music download.")
-        return None
-
-    query = f"financial dark ambient cinematic {mood}"
-    url = (
-        f"https://freesound.org/apiv2/search/text/"
-        f"?query={requests.utils.quote(query)}"
-        f"&fields=id,name,previews,duration"
-        f"&token={freesound_api_key}&page_size=5"
-    )
-
-    try:
-        res = requests.get(url, timeout=20).json()
-        results = [r for r in (res.get("results") or []) if r.get("duration", 0) >= 30]
-        if results:
-            track = results[0]
-            preview_url = track["previews"].get("preview-hq-mp3") or track["previews"].get("preview-lq-mp3")
-            if preview_url:
-                audio_data = requests.get(preview_url, timeout=20).content
-                with open(output_path, "wb") as f:
-                    f.write(audio_data)
-                print(f"🎵 Downloaded Background Music: {track['name']}")
-                return output_path
-    except Exception as e:
-        print(f"⚠️ Background music fetch failed: {e}")
-    return None
 
 
 def add_dynamic_subtitles(video_clip, srt_path):
@@ -147,7 +116,7 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
     target_duration = narration_audio.duration
     print(f"⏱️ Video Duration target (Synced to Voice): {target_duration:.2f} seconds")
 
-    # Load and standardize visual clips up to exact target_duration
+    # Load visual clips up to exact target_duration
     processed_clips = []
     current_time = 0.0
 
@@ -207,7 +176,9 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
         audio_tracks.append(bg_audio)
 
     final_audio = CompositeAudioClip(audio_tracks)
-    base_video = base_video.with_audio(final_audio) if hasattr(final_video, "with_audio") else base_video.set_audio(final_audio)
+    
+    # FIX: Correct variable reference from base_video instead of final_video
+    base_video = base_video.with_audio(final_audio) if hasattr(base_video, "with_audio") else base_video.set_audio(final_audio)
 
     base_video.write_videofile(
         output_path,
@@ -231,7 +202,6 @@ def get_authenticated_youtube_service():
     """Retrieves authenticated Google YouTube client using token.pickle or TOKEN_PICKLE_B64 env secret."""
     token_file = "token.pickle"
     
-    # Check if token.pickle exists locally; if not, decode Base64 secret
     if not os.path.exists(token_file):
         token_b64 = os.getenv("TOKEN_PICKLE_B64")
         if token_b64:
@@ -253,16 +223,13 @@ def get_authenticated_youtube_service():
 
 
 def upload_to_youtube(video_path, title, description, tags, publish_at=None):
-    """
-    Uploads compiled video to YouTube with complete SEO Title, rich Description, and Tags.
-    """
+    """Uploads compiled video to YouTube with complete SEO metadata."""
     youtube = get_authenticated_youtube_service()
     if not youtube:
         print("⚠️ Skipping YouTube upload due to missing authentication.")
         return None
 
     try:
-        # Enforce Ambientnest branding in tags
         if isinstance(tags, list):
             if "ambientnest" not in tags:
                 tags.insert(0, "ambientnest")

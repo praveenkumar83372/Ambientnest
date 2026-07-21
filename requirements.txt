@@ -1,9 +1,8 @@
 groq
-edge-tts
-moviepy>=2.0.0
-requests
-python-dotenv
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
-Pillow
+requests
+pillow
+moviepy>=2.0.0
+pysrt>=1.1.2

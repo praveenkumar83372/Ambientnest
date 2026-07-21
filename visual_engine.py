@@ -1,7 +1,8 @@
 """
-Financial Visual & Audio Master Engine
+Financial Visual & Audio Master Engine (Ultra-Production Edition)
 Handles scene asset preprocessing, vertical formatting (1080x1920), Ken Burns zooms, 
-200% voice audio, SFX transitions, background music ducking, and dynamic burned-in captions.
+200% voice audio, auto-SFX transitions, background music ducking, dynamic dual-color captions, 
+and 'AMBIENTNEST' corner watermark branding.
 """
 
 import os
@@ -45,7 +46,7 @@ def _find_ffmpeg():
 FFMPEG = _find_ffmpeg()
 
 
-def create_placeholder_image(output_path, text="Ambientnest Wealth"):
+def create_placeholder_image(output_path, text="AMBIENTNEST"):
     """Generates an aesthetic dark-themed financial fallback card if an asset fails to download."""
     img = Image.new("RGB", (1080, 1920), color=(15, 23, 42))  # Dark slate background
     draw = ImageDraw.Draw(img)
@@ -93,8 +94,48 @@ def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
         return final_clip.set_duration(duration)
 
 
+def add_brand_watermark(video_clip, text="AMBIENTNEST"):
+    """Overlays a subtle, semi-transparent brand watermark in the top-left corner."""
+    try:
+        if MOVIEPY_V2:
+            wm_clip = (
+                TextClip(
+                    font="Arial-Bold",
+                    text=f"  {text}  ",
+                    font_size=28,
+                    color="white",
+                    bg_color="black",
+                    method="caption"
+                )
+                .with_duration(video_clip.duration)
+                .with_position((40, 60))
+            )
+            if hasattr(wm_clip, "with_opacity"):
+                wm_clip = wm_clip.with_opacity(0.65)
+        else:
+            wm_clip = (
+                TextClip(
+                    f"  {text}  ",
+                    font="Arial-Bold",
+                    fontsize=28,
+                    color="white",
+                    bg_color="black",
+                    method="caption"
+                )
+                .set_duration(video_clip.duration)
+                .set_position((40, 60))
+                .set_opacity(0.65)
+            )
+
+        print("🏷️ [Visual Engine] Applied 'AMBIENTNEST' brand watermark overlay.")
+        return CompositeVideoClip([video_clip, wm_clip])
+    except Exception as e:
+        print(f"⚠️ Watermark warning: {e}")
+        return video_clip
+
+
 def add_dynamic_subtitles(video_clip, srt_path):
-    """Parses .srt file and overlays high-visibility, centered yellow captions."""
+    """Parses .srt file and overlays kinetic captions with keyword color highlights."""
     if not HAS_PYSRT or not os.path.exists(srt_path):
         print("⚠️ Subtitles skipped: pysrt not available or srt file missing.")
         return video_clip
@@ -102,6 +143,9 @@ def add_dynamic_subtitles(video_clip, srt_path):
     try:
         subs = pysrt.open(srt_path, encoding='utf-8')
         subtitle_clips = [video_clip]
+
+        # Financial keywords to highlight in Neon Cyan (#00F0FF)
+        keywords = ["$", "PERCENT", "BILLION", "MILLION", "DEBT", "BANK", "MONEY", "INFLATION", "WEALTH", "SECRET", "CRASH", "TAX", "BITCOIN", "FED"]
 
         for sub in subs:
             start_time = (sub.start.hours * 3600) + (sub.start.minutes * 60) + sub.start.seconds + (sub.start.milliseconds / 1000.0)
@@ -112,14 +156,18 @@ def add_dynamic_subtitles(video_clip, srt_path):
             if not text:
                 continue
 
+            # Dynamic color highlight
+            is_highlight = any(kw in text for kw in keywords)
+            text_color = "#00F0FF" if is_highlight else "yellow"
+
             try:
                 if MOVIEPY_V2:
                     txt_clip = (
                         TextClip(
                             font="Arial-Bold",
                             text=text,
-                            font_size=60,
-                            color="yellow",
+                            font_size=58,
+                            color=text_color,
                             stroke_color="black",
                             stroke_width=4,
                             size=(950, None),
@@ -127,15 +175,15 @@ def add_dynamic_subtitles(video_clip, srt_path):
                         )
                         .with_start(start_time)
                         .with_duration(duration)
-                        .with_position(("center", 1200))
+                        .with_position(("center", 1250))
                     )
                 else:
                     txt_clip = (
                         TextClip(
                             text,
                             font="Arial-Bold",
-                            fontsize=60,
-                            color="yellow",
+                            fontsize=58,
+                            color=text_color,
                             stroke_color="black",
                             stroke_width=4,
                             size=(950, None),
@@ -143,13 +191,13 @@ def add_dynamic_subtitles(video_clip, srt_path):
                         )
                         .set_start(start_time)
                         .set_duration(duration)
-                        .set_position(("center", 1200))
+                        .set_position(("center", 1250))
                     )
                 subtitle_clips.append(txt_clip)
             except Exception as e_txt:
                 print(f"⚠️ Single subtitle clip error: {e_txt}")
 
-        print(f"💬 [Visual Engine] Applied {len(subtitle_clips)-1} dynamic captions!")
+        print(f"💬 [Visual Engine] Applied {len(subtitle_clips)-1} kinetic dual-color captions!")
         return CompositeVideoClip(subtitle_clips)
 
     except Exception as e:
@@ -252,10 +300,10 @@ def process_all_visual_assets(asset_list):
 
 def build_final_master_short(processed_video_paths, voice_path, srt_path=None, bgm_path=None, sfx_path=None, output_filename="final_short.mp4"):
     """
-    Compiles final short with 200% Voice, 35% BGM, SFX whooshes, and burned-in captions.
-    Paced strictly to voice length.
+    Compiles final short with 200% Voice, 35% BGM, automated transition SFX whooshes, 
+    'AMBIENTNEST' watermark, and kinetic dual-color captions. Paced strictly to voice length.
     """
-    print("\n🎧 [Master Engine] Building full audio-visual short...")
+    print("\n🎧 [Master Engine] Building ultra-production audio-visual short...")
 
     if not os.path.exists(voice_path):
         raise FileNotFoundError(f"❌ Voice audio missing: {voice_path}")
@@ -281,11 +329,14 @@ def build_final_master_short(processed_video_paths, voice_path, srt_path=None, b
 
     final_video = concatenate_videoclips(clips, method="compose")
 
-    # Burn in subtitles
+    # 1. Overlay Corner Brand Watermark ("AMBIENTNEST")
+    final_video = add_brand_watermark(final_video, text="AMBIENTNEST")
+
+    # 2. Burn in Dual-Color Kinetic Subtitles
     if srt_path and os.path.exists(srt_path):
         final_video = add_dynamic_subtitles(final_video, srt_path)
 
-    # Audio Mix
+    # 3. Audio Mixing
     audio_tracks = [voice_audio]
 
     if bgm_path and os.path.exists(bgm_path):
@@ -299,11 +350,14 @@ def build_final_master_short(processed_video_paths, voice_path, srt_path=None, b
 
         audio_tracks.append(bgm)
 
+    # Automated SFX Whooshes placed at scene transitions
     if sfx_path and os.path.exists(sfx_path):
-        sfx = AudioFileClip(sfx_path)
-        sfx = sfx.with_volume_scaled(0.5) if hasattr(sfx, "with_volume_scaled") else sfx.volumex(0.5)
-        sfx = sfx.with_start(0.2) if hasattr(sfx, "with_start") else sfx.set_start(0.2)
-        audio_tracks.append(sfx)
+        for sfx_time in [0.2, 3.0, 6.0, 9.0, 12.0, 15.0]:
+            if sfx_time < target_duration:
+                sfx = AudioFileClip(sfx_path)
+                sfx = sfx.with_volume_scaled(0.4) if hasattr(sfx, "with_volume_scaled") else sfx.volumex(0.4)
+                sfx = sfx.with_start(sfx_time) if hasattr(sfx, "with_start") else sfx.set_start(sfx_time)
+                audio_tracks.append(sfx)
 
     final_audio = CompositeAudioClip(audio_tracks)
     final_video = final_video.with_audio(final_audio) if hasattr(final_video, "with_audio") else final_video.set_audio(final_audio)
