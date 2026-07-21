@@ -2,9 +2,10 @@ name: Financial Short Automation Pipeline
 
 on:
   schedule:
-    # Runs automatically twice daily (e.g., 08:00 UTC and 20:00 UTC)
-    - cron: '0 8,20 * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+    # Runs daily in the morning at 07:00 UTC (12:30 PM IST) for news-backed scripts
+    # And evening at 18:00 UTC (11:30 PM IST) for global evening audience peak
+    - cron: '0 7,18 * * *'
+  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
 
 jobs:
   build-and-generate:
@@ -24,8 +25,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg imagemagick
-          # Fix Policy configuration for ImageMagick TextClip rendering
-          sudo sed -i 'r/policy domain="path" rights="none" pattern="@\*"/policy domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml || true
+          # Fix security policy configuration for ImageMagick TextClip rendering in MoviePy
+          sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml || true
+          sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/g' /etc/ImageMagick-6/policy.xml || true
 
       - name: Install Python Dependencies
         run: |
@@ -56,7 +58,7 @@ jobs:
             echo "$TOKEN_PICKLE_B64" | base64 -d > token.pickle
           fi
           
-          # Run the master orchestrator pipeline
+          # Run the master orchestrator pipeline (News Scraper -> CCO -> Visual Engine -> CEO Scheduled Upload)
           python orchestrator.py
 
       - name: Commit & Push Updated Memory State

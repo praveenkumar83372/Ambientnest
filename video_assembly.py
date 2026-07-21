@@ -78,7 +78,7 @@ def add_dynamic_subtitles(video_clip, srt_path):
         for sub in subs:
             start_time = (sub.start.hours * 3600) + (sub.start.minutes * 60) + sub.start.seconds + (sub.start.milliseconds / 1000.0)
             end_time = (sub.end.hours * 3600) + (sub.end.minutes * 60) + sub.end.seconds + (sub.end.milliseconds / 1000.0)
-            duration = end_time - start_time
+            duration = max(0.2, end_time - start_time)
             text = sub.text.strip().upper()
 
             if not text:
@@ -207,7 +207,7 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
         audio_tracks.append(bg_audio)
 
     final_audio = CompositeAudioClip(audio_tracks)
-    base_video = base_video.with_audio(final_audio) if hasattr(base_video, "with_audio") else base_video.set_audio(final_audio)
+    base_video = base_video.with_audio(final_audio) if hasattr(final_video, "with_audio") else base_video.set_audio(final_audio)
 
     base_video.write_videofile(
         output_path,
@@ -231,7 +231,7 @@ def get_authenticated_youtube_service():
     """Retrieves authenticated Google YouTube client using token.pickle or TOKEN_PICKLE_B64 env secret."""
     token_file = "token.pickle"
     
-    # 1. Check if token.pickle exists locally
+    # Check if token.pickle exists locally; if not, decode Base64 secret
     if not os.path.exists(token_file):
         token_b64 = os.getenv("TOKEN_PICKLE_B64")
         if token_b64:
@@ -253,18 +253,31 @@ def get_authenticated_youtube_service():
 
 
 def upload_to_youtube(video_path, title, description, tags, publish_at=None):
-    """Uploads compiled video to YouTube with complete SEO metadata."""
+    """
+    Uploads compiled video to YouTube with complete SEO Title, rich Description, and Tags.
+    """
     youtube = get_authenticated_youtube_service()
     if not youtube:
         print("⚠️ Skipping YouTube upload due to missing authentication.")
         return None
 
     try:
+        # Enforce Ambientnest branding in tags
+        if isinstance(tags, list):
+            if "ambientnest" not in tags:
+                tags.insert(0, "ambientnest")
+            if "ambientnest wealth" not in tags:
+                tags.insert(1, "ambientnest wealth")
+            if "ambientnest shorts" not in tags:
+                tags.insert(2, "ambientnest shorts")
+        else:
+            tags = ["ambientnest", "ambientnest wealth", "wealth", "finance", "shorts"]
+
         body = {
             "snippet": {
                 "title": title[:100],
                 "description": description,
-                "tags": tags if isinstance(tags, list) else ["wealth", "finance", "shorts"],
+                "tags": tags[:20],
                 "categoryId": "27"  # Education / Business & Finance
             },
             "status": {
@@ -279,7 +292,7 @@ def upload_to_youtube(video_path, title, description, tags, publish_at=None):
         media = MediaFileUpload(video_path, chunksize=-1, resumable=True, mimetype="video/mp4")
         request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
 
-        print(f"🚀 Uploading video to YouTube: '{title}'...")
+        print(f"🚀 Uploading to YouTube: '{title}'...")
         response = request.execute()
         video_id = response.get("id")
         print(f"🎉 Upload successful! Video ID: {video_id}")

@@ -1,10 +1,7 @@
 """
 Financial Visual & Audio Master Engine
-Processes stock video clips, static images, natural human voiceover, 
-sound effects, background music, and dynamic animated captions.
-
-Standardizes resolution to 1080x1920 (9:16 portrait), applies Ken Burns 
-effects, burns in dynamic subtitles, and ensures zero trailing silence.
+Handles scene asset preprocessing, vertical formatting (1080x1920), Ken Burns zooms, 
+200% voice audio, SFX transitions, background music ducking, and dynamic burned-in captions.
 """
 
 import os
@@ -34,6 +31,7 @@ except ImportError:
 
 
 def _find_ffmpeg():
+    """Locates system or build-specific FFmpeg executable."""
     f = _shutil.which("ffmpeg")
     if f:
         return f
@@ -47,8 +45,8 @@ def _find_ffmpeg():
 FFMPEG = _find_ffmpeg()
 
 
-def create_placeholder_image(output_path, text="Financial Secret"):
-    """Generates an aesthetic dark-themed financial fallback image if an asset download fails."""
+def create_placeholder_image(output_path, text="Ambientnest Wealth"):
+    """Generates an aesthetic dark-themed financial fallback card if an asset fails to download."""
     img = Image.new("RGB", (1080, 1920), color=(15, 23, 42))  # Dark slate background
     draw = ImageDraw.Draw(img)
 
@@ -65,34 +63,26 @@ def create_placeholder_image(output_path, text="Financial Secret"):
 
 
 def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
-    """
-    Applies a smooth dynamic zoom-in (Ken Burns) effect to static photos.
-    """
+    """Applies a smooth dynamic zoom-in (Ken Burns) effect to static photos."""
     img_clip = ImageClip(image_path)
     
-    # Set duration
     if hasattr(img_clip, "with_duration"):
         img_clip = img_clip.with_duration(duration)
     else:
         img_clip = img_clip.set_duration(duration)
 
-    # Resize to 1920 height
     if hasattr(img_clip, "resized"):
         img_clip = img_clip.resized(height=target_size[1])
         if img_clip.w < target_size[0]:
             img_clip = img_clip.resized(width=target_size[0])
         
-        # Center crop
         img_clip = img_clip.cropped(x_center=img_clip.w / 2, y_center=img_clip.h / 2, width=1080, height=1920)
-        
-        # Smooth zoom
         zoomed_clip = img_clip.resized(lambda t: 1.0 + 0.05 * t)
         pos_clip = zoomed_clip.with_position("center") if hasattr(zoomed_clip, "with_position") else zoomed_clip.set_position("center")
         final_clip = CompositeVideoClip([pos_clip], size=target_size)
         return final_clip.with_duration(duration) if hasattr(final_clip, "with_duration") else final_clip.set_duration(duration)
     
     else:
-        # Legacy MoviePy v1 fallback
         img_clip = img_clip.resize(height=target_size[1])
         if img_clip.w < target_size[0]:
             img_clip = img_clip.resize(width=target_size[0])
@@ -104,11 +94,9 @@ def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
 
 
 def add_dynamic_subtitles(video_clip, srt_path):
-    """
-    Parses an SRT subtitle file and overlays high-contrast, bold yellow captions on top of the video.
-    """
+    """Parses .srt file and overlays high-visibility, centered yellow captions."""
     if not HAS_PYSRT or not os.path.exists(srt_path):
-        print("⚠️ Subtitles skipped: pysrt not installed or .srt file not found.")
+        print("⚠️ Subtitles skipped: pysrt not available or srt file missing.")
         return video_clip
 
     try:
@@ -118,53 +106,54 @@ def add_dynamic_subtitles(video_clip, srt_path):
         for sub in subs:
             start_time = (sub.start.hours * 3600) + (sub.start.minutes * 60) + sub.start.seconds + (sub.start.milliseconds / 1000.0)
             end_time = (sub.end.hours * 3600) + (sub.end.minutes * 60) + sub.end.seconds + (sub.end.milliseconds / 1000.0)
-            duration = end_time - start_time
+            duration = max(0.2, end_time - start_time)
             text = sub.text.strip().upper()
 
             if not text:
                 continue
 
-            # Create high-impact yellow text clip
-            if MOVIEPY_V2:
-                txt_clip = (
-                    TextClip(
-                        font="Arial-Bold",
-                        text=text,
-                        font_size=55,
-                        color="yellow",
-                        stroke_color="black",
-                        stroke_width=3,
-                        size=(900, None),
-                        method="caption"
+            try:
+                if MOVIEPY_V2:
+                    txt_clip = (
+                        TextClip(
+                            font="Arial-Bold",
+                            text=text,
+                            font_size=60,
+                            color="yellow",
+                            stroke_color="black",
+                            stroke_width=4,
+                            size=(950, None),
+                            method="caption"
+                        )
+                        .with_start(start_time)
+                        .with_duration(duration)
+                        .with_position(("center", 1200))
                     )
-                    .with_start(start_time)
-                    .with_duration(duration)
-                    .with_position(("center", 1250))
-                )
-            else:
-                txt_clip = (
-                    TextClip(
-                        text,
-                        font="Arial-Bold",
-                        fontsize=55,
-                        color="yellow",
-                        stroke_color="black",
-                        stroke_width=3,
-                        size=(900, None),
-                        method="caption"
+                else:
+                    txt_clip = (
+                        TextClip(
+                            text,
+                            font="Arial-Bold",
+                            fontsize=60,
+                            color="yellow",
+                            stroke_color="black",
+                            stroke_width=4,
+                            size=(950, None),
+                            method="caption"
+                        )
+                        .set_start(start_time)
+                        .set_duration(duration)
+                        .set_position(("center", 1200))
                     )
-                    .set_start(start_time)
-                    .set_duration(duration)
-                    .set_position(("center", 1250))
-                )
+                subtitle_clips.append(txt_clip)
+            except Exception as e_txt:
+                print(f"⚠️ Single subtitle clip error: {e_txt}")
 
-            subtitle_clips.append(txt_clip)
-
-        print(f"💬 [Visual Engine] Applied {len(subs)} burned-in subtitle overlays.")
+        print(f"💬 [Visual Engine] Applied {len(subtitle_clips)-1} dynamic captions!")
         return CompositeVideoClip(subtitle_clips)
 
     except Exception as e:
-        print(f"⚠️ Error adding subtitles: {e}. Returning raw video.")
+        print(f"⚠️ Error burning subtitles: {e}")
         return video_clip
 
 
@@ -174,9 +163,9 @@ def process_scene_asset(asset_info, output_dir="temp_processed"):
     standardized 1080x1920 vertical clip.
     """
     os.makedirs(output_dir, exist_ok=True)
-    raw_path = asset_info["file_path"]
-    asset_type = asset_info["type"]
-    idx = asset_info["scene_index"]
+    raw_path = asset_info.get("file_path", "")
+    asset_type = asset_info.get("type", "image")
+    idx = asset_info.get("scene_index", 0)
     target_duration = asset_info.get("target_duration", 3.0)
 
     output_path = os.path.join(output_dir, f"scene_processed_{idx:02d}.mp4")
@@ -249,7 +238,7 @@ def process_scene_asset(asset_info, output_dir="temp_processed"):
 
 
 def process_all_visual_assets(asset_list):
-    """Loops through all downloaded assets and processes them sequentially."""
+    """Loops through all downloaded assets and processes them into standard clips."""
     print(f"\n🖼️ [Visual Engine] Processing {len(asset_list)} visual scenes into 1080x1920 clips...")
     processed_paths = []
 
@@ -263,25 +252,19 @@ def process_all_visual_assets(asset_list):
 
 def build_final_master_short(processed_video_paths, voice_path, srt_path=None, bgm_path=None, sfx_path=None, output_filename="final_short.mp4"):
     """
-    Assembles final video matching EXACT voice audio length (No silent video tail!),
-    burns in dynamic yellow subtitles, applies audio mixing (Voice 200%, BGM 40%, SFX 50%), and renders final MP4.
+    Compiles final short with 200% Voice, 35% BGM, SFX whooshes, and burned-in captions.
+    Paced strictly to voice length.
     """
-    print("\n🎧 [Master Audio-Visual Engine] Compiling final high-production Short...")
+    print("\n🎧 [Master Engine] Building full audio-visual short...")
 
     if not os.path.exists(voice_path):
-        raise FileNotFoundError(f"❌ Voice audio file missing: {voice_path}")
+        raise FileNotFoundError(f"❌ Voice audio missing: {voice_path}")
 
-    # Load Voice Audio and boost volume to 200%
     voice_audio = AudioFileClip(voice_path)
-    if hasattr(voice_audio, "with_volume_scaled"):
-        voice_audio = voice_audio.with_volume_scaled(2.0)
-    else:
-        voice_audio = voice_audio.volumex(2.0)
-
+    voice_audio = voice_audio.with_volume_scaled(2.0) if hasattr(voice_audio, "with_volume_scaled") else voice_audio.volumex(2.0)
     target_duration = voice_audio.duration
-    print(f"⏱️ Target Video Duration (Paced to Voice): {target_duration:.2f} seconds")
 
-    # Load video clips until they match exact audio duration
+    # Load and concatenate visual scenes
     clips = []
     current_time = 0.0
 
@@ -289,49 +272,42 @@ def build_final_master_short(processed_video_paths, voice_path, srt_path=None, b
         for v_file in processed_video_paths:
             if current_time >= target_duration:
                 break
-            
             clip = VideoFileClip(v_file)
-            remaining_time = target_duration - current_time
-
-            if clip.duration > remaining_time:
-                clip = clip.subclipped(0, remaining_time) if hasattr(clip, "subclipped") else clip.subclip(0, remaining_time)
-
+            rem = target_duration - current_time
+            if clip.duration > rem:
+                clip = clip.subclipped(0, rem) if hasattr(clip, "subclipped") else clip.subclip(0, rem)
             clips.append(clip)
             current_time += clip.duration
 
-    # Concatenate visual tracks
     final_video = concatenate_videoclips(clips, method="compose")
 
-    # Apply Burned-in Subtitles if SRT path provided
+    # Burn in subtitles
     if srt_path and os.path.exists(srt_path):
         final_video = add_dynamic_subtitles(final_video, srt_path)
 
-    # Mix Audio Tracks (Voice: 200%, BGM: 40%, SFX: 50%)
+    # Audio Mix
     audio_tracks = [voice_audio]
 
     if bgm_path and os.path.exists(bgm_path):
         bgm = AudioFileClip(bgm_path)
-        bgm = bgm.with_volume_scaled(0.4) if hasattr(bgm, "with_volume_scaled") else bgm.volumex(0.4)
+        bgm = bgm.with_volume_scaled(0.35) if hasattr(bgm, "with_volume_scaled") else bgm.volumex(0.35)
         
         if bgm.duration < target_duration:
             bgm = bgm.looped(duration=target_duration) if hasattr(bgm, "looped") else bgm.loop(duration=target_duration)
         else:
             bgm = bgm.subclipped(0, target_duration) if hasattr(bgm, "subclipped") else bgm.subclip(0, target_duration)
-        
+
         audio_tracks.append(bgm)
 
     if sfx_path and os.path.exists(sfx_path):
         sfx = AudioFileClip(sfx_path)
         sfx = sfx.with_volume_scaled(0.5) if hasattr(sfx, "with_volume_scaled") else sfx.volumex(0.5)
-        sfx = sfx.with_start(0.5) if hasattr(sfx, "with_start") else sfx.set_start(0.5)
+        sfx = sfx.with_start(0.2) if hasattr(sfx, "with_start") else sfx.set_start(0.2)
         audio_tracks.append(sfx)
 
-    # Attach Composite Audio
     final_audio = CompositeAudioClip(audio_tracks)
     final_video = final_video.with_audio(final_audio) if hasattr(final_video, "with_audio") else final_video.set_audio(final_audio)
 
-    # Write final video file
-    print("🚀 Rendering master 1080x1920 Short with balanced audio and subtitles...")
     final_video.write_videofile(
         output_filename,
         fps=30,
@@ -341,7 +317,6 @@ def build_final_master_short(processed_video_paths, voice_path, srt_path=None, b
         logger=None
     )
 
-    # Clean up memory
     final_video.close()
     for c in clips:
         c.close()
