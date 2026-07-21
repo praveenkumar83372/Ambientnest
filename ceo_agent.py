@@ -2,11 +2,6 @@
 Chief Executive Officer (CEO) Agent
 Main orchestrator for strategic decisions, performance evaluation, 
 YouTube channel analytics, and continuous channel optimization.
-
-Responsibilities:
-1. Analyzes live YouTube channel statistics to guide C-Suite strategy.
-2. Directs CCO on target video length, high-RPM niches, and trending keywords.
-3. Evaluates past video metrics to refine channel memory (channel_state.json).
 """
 
 import os
@@ -21,16 +16,15 @@ You are the Chief Executive Officer (CEO) of a high-growth faceless YouTube Shor
 
 YOUR ROLE:
 1. Review overall channel performance metrics and previous topic history.
-2. Formulate strategic directives for the content team (CCO & Visual Engine).
-3. Ensure high Audience Retention, High CTR, and High RPM execution.
+2. Evaluate pitches from the Chief Content Officer (CCO).
+3. Formulate strategic directives for the content team.
 
 STRICT JSON OUTPUT FORMAT ONLY:
 {
-    "executive_summary": "Brief 1-sentence strategic assessment",
-    "target_script_length": 150,
-    "focus_niche": "Billionaire Mindsets / Dark Psychology of Wealth",
-    "strategic_directive": "Focus on high-stakes hooks mentioning real billionaires (Elon Musk, Warren Buffett) to maximize retention.",
-    "recommended_hashtags": "#Shorts #Wealth #Finance #Money #Billionaires"
+    "decision": "APPROVED",
+    "executive_summary": "Strategic evaluation of the topic concept",
+    "executive_directive": "Focus on high-stakes hooks mentioning real billionaires to maximize retention.",
+    "category": "Wealth & Financial Psychology"
 }
 """
 
@@ -41,11 +35,40 @@ class ChiefExecutiveOfficer:
             raise ValueError("❌ GROQ_API_KEY is missing! Please set it in your repository secrets.")
         self.client = Groq(api_key=GROQ_API_KEY)
 
+    def evaluate_cco_pitch(self, cco_pitch, cao_briefing=None):
+        """Evaluates and refines the CCO content pitch using Groq AI."""
+        print("👔 [CEO Agent] Evaluating CCO Pitch and issuing directives...")
+        
+        if not cco_pitch:
+            return {
+                "decision": "APPROVED",
+                "executive_directive": "Focus on high-stakes hooks mentioning real billionaires to maximize retention.",
+                "category": "Wealth Secrets"
+            }
+
+        user_prompt = f"CCO Pitch: {json.dumps(cco_pitch)}. CAO Briefing: {json.dumps(cao_briefing)}. Evaluate and give strategic directive."
+
+        try:
+            res = self.client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": CEO_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                response_format={"type": "json_object"}
+            )
+            return json.loads(res.choices[0].message.content)
+        except Exception as e:
+            print(f"⚠️ CEO Pitch evaluation warning: {e}")
+            return {
+                "decision": "APPROVED",
+                "executive_directive": "Hook viewers within first 3 seconds with shocking money truths.",
+                "category": cco_pitch.get("target_category", "Wealth & Finance")
+            }
+
     def analyze_channel_data(self, youtube_client, channel_id=None):
-        """
-        Fetches live channel analytics via YouTube Data API v3 and computes SEO strategy.
-        If channel_id is not provided, defaults to checking authenticated user's channel ('mine=True').
-        """
+        """Fetches live channel analytics via YouTube Data API v3 and computes SEO strategy."""
         print("\n👔 [CEO Agent] Analyzing Live YouTube Channel Statistics & Performance...")
         try:
             if channel_id:
@@ -62,45 +85,28 @@ class ChiefExecutiveOfficer:
             response = request.execute()
 
             if not response.get('items'):
-                print("⚠️ [CEO Agent] No channel found with provided parameters. Using default growth targets.")
                 return self._get_fallback_seo_strategy()
 
             stats = response['items'][0]['statistics']
             snippet = response['items'][0]['snippet']
 
-            channel_title = snippet.get('title', 'Wealth Shorts Channel')
             views = int(stats.get('viewCount', 0))
             subscribers = int(stats.get('subscriberCount', 0))
             video_count = int(stats.get('videoCount', 0))
 
-            print(f"📊 [CEO REPORT] Channel: '{channel_title}'")
-            print(f"   📈 Views: {views:,} | 👥 Subscribers: {subscribers:,} | 🎬 Videos: {video_count}")
+            print(f"📊 [CEO REPORT] Views: {views:,} | Subs: {subscribers:,} | Videos: {video_count}")
 
-            # Dynamic strategy adaptation based on channel size
-            target_words = 145 if video_count > 5 else 135  # Dynamic word length targeting ~50-58s
-            
-            seo_strategy = {
-                "channel_title": channel_title,
+            return {
+                "channel_title": snippet.get('title', 'Wealth Shorts Channel'),
                 "total_views": views,
                 "subscribers": subscribers,
                 "video_count": video_count,
                 "target_length_seconds": 55,
-                "target_word_count": target_words,
+                "target_word_count": 145,
                 "voice_id": "en-US-ChristopherNeural",
-                "primary_keywords": ["wealth secrets", "passive income 2026", "money mindset", "billionaire habits"],
+                "primary_keywords": ["wealth secrets", "passive income 2026", "money mindset"],
                 "hashtags": "#Shorts #Wealth #Finance #Money #Business #Success"
             }
-
-            # Update shared state with CEO observations
-            state = load_state()
-            state["latest_channel_stats"] = {
-                "views": views,
-                "subscribers": subscribers,
-                "video_count": video_count
-            }
-            save_state(state)
-
-            return seo_strategy
 
         except Exception as e:
             print(f"⚠️ [CEO Agent] YouTube Analytics warning: {e}. Defaulting to baseline strategy.")
@@ -124,21 +130,17 @@ class ChiefExecutiveOfficer:
                 temperature=0.7,
                 response_format={"type": "json_object"}
             )
-            directive = json.loads(res.choices[0].message.content)
-            print(f"👔 [CEO DIRECTIVE]: {directive.get('executive_summary')}")
-            return directive
+            return json.loads(res.choices[0].message.content)
         except Exception as e:
             print(f"⚠️ CEO Directive error: {e}")
             return {
+                "decision": "APPROVED",
                 "executive_summary": "Maintain high retention and fast-paced hook.",
-                "target_script_length": 145,
-                "focus_niche": "Wealth & Financial Psychology",
-                "strategic_directive": "Hook viewers within first 3 seconds with billionaire money facts.",
-                "recommended_hashtags": "#Shorts #Wealth #Finance #Money"
+                "executive_directive": "Hook viewers within first 3 seconds with billionaire money facts.",
+                "category": "Wealth & Financial Psychology"
             }
 
     def _get_fallback_seo_strategy(self):
-        """Fallback SEO parameters if API data is inaccessible."""
         return {
             "channel_title": "Ambientnest Wealth",
             "total_views": 0,
