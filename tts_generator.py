@@ -20,7 +20,19 @@ async def generate_audio_and_subtitles(text, audio_out="narration.mp3", srt_out=
             elif chunk["type"] == "WordBoundary":
                 submaker.create_sub_from_dict(chunk)
 
+    # Use get_srt() or generate_subs() dynamically depending on edge-tts version
+    if hasattr(submaker, "get_srt"):
+        srt_content = submaker.get_srt()
+    elif hasattr(submaker, "generate_subs"):
+        srt_content = submaker.generate_subs()
+    else:
+        # Fallback to webvtt format if needed
+        srt_content = submaker.generate_vtt()
+
     with open(srt_out, "w", encoding="utf-8") as srt_file:
-        srt_file.write(submaker.generate_subs())
+        srt_file.write(srt_content)
 
     print(f"🎙️ Voiceover saved to {audio_out} and subtitles to {srt_out}")
+
+if __name__ == "__main__":
+    asyncio.run(generate_audio_and_subtitles("Test narration text for finance shorts."))
