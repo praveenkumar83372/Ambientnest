@@ -4,12 +4,19 @@ Processes stock video clips, static images, natural human voiceover,
 sound effects, background music, and dynamic animated captions.
 
 Standardizes resolution to 1080x1920 (9:16 portrait), applies Ken Burns 
-effects, and ensures audio/visual clips align perfectly with zero trailing silence.
+effects, burns in dynamic subtitles, and ensures zero trailing silence.
 """
 
 import os
 import shutil as _shutil
 from PIL import Image, ImageDraw, ImageFont
+
+# Optional dependency for SRT parsing
+try:
+    import pysrt
+    HAS_PYSRT = True
+except ImportError:
+    HAS_PYSRT = False
 
 # MoviePy compatibility handler (Supports both MoviePy v1 and v2)
 try:
@@ -94,6 +101,71 @@ def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
         zoomed_clip = img_clip.resize(lambda t: 1.0 + 0.05 * t)
         final_clip = CompositeVideoClip([zoomed_clip.set_position("center")], size=target_size)
         return final_clip.set_duration(duration)
+
+
+def add_dynamic_subtitles(video_clip, srt_path):
+    """
+    Parses an SRT subtitle file and overlays high-contrast, bold yellow captions on top of the video.
+    """
+    if not HAS_PYSRT or not os.path.exists(srt_path):
+        print("⚠️ Subtitles skipped: pysrt not installed or .srt file not found.")
+        return video_clip
+
+    try:
+        subs = pysrt.open(srt_path, encoding='utf-8')
+        subtitle_clips = [video_clip]
+
+        for sub in subs:
+            start_time = (sub.start.hours * 3600) + (sub.start.minutes * 60) + sub.start.seconds + (sub.start.milliseconds / 1000.0)
+            end_time = (sub.end.hours * 3600) + (sub.end.minutes * 60) + sub.end.seconds + (sub.end.milliseconds / 1000.0)
+            duration = end_time - start_time
+            text = sub.text.strip().upper()
+
+            if not text:
+                continue
+
+            # Create high-impact yellow text clip
+            if MOVIEPY_V2:
+                txt_clip = (
+                    TextClip(
+                        font="Arial-Bold",
+                        text=text,
+                        font_size=55,
+                        color="yellow",
+                        stroke_color="black",
+                        stroke_width=3,
+                        size=(900, None),
+                        method="caption"
+                    )
+                    .with_start(start_time)
+                    .with_duration(duration)
+                    .with_position(("center", 1250))
+                )
+            else:
+                txt_clip = (
+                    TextClip(
+                        text,
+                        font="Arial-Bold",
+                        fontsize=55,
+                        color="yellow",
+                        stroke_color="black",
+                        stroke_width=3,
+                        size=(900, None),
+                        method="caption"
+                    )
+                    .set_start(start_time)
+                    .set_duration(duration)
+                    .set_position(("center", 1250))
+                )
+
+            subtitle_clips.append(txt_clip)
+
+        print(f"💬 [Visual Engine] Applied {len(subs)} burned-in subtitle overlays.")
+        return CompositeVideoClip(subtitle_clips)
+
+    except Exception as e:
+        print(f"⚠️ Error adding subtitles: {e}. Returning raw video.")
+        return video_clip
 
 
 def process_scene_asset(asset_info, output_dir="temp_processed"):
@@ -189,10 +261,10 @@ def process_all_visual_assets(asset_list):
     return processed_paths
 
 
-def build_final_master_short(processed_video_paths, voice_path, bgm_path=None, sfx_path=None, output_filename="final_short.mp4"):
+def build_final_master_short(processed_video_paths, voice_path, srt_path=None, bgm_path=None, sfx_path=None, output_filename="final_short.mp4"):
     """
     Assembles final video matching EXACT voice audio length (No silent video tail!),
-    applies professional audio mixing (Voice 200%, BGM 40%, SFX 50%), and renders final MP4.
+    burns in dynamic yellow subtitles, applies audio mixing (Voice 200%, BGM 40%, SFX 50%), and renders final MP4.
     """
     print("\n🎧 [Master Audio-Visual Engine] Compiling final high-production Short...")
 
@@ -230,6 +302,10 @@ def build_final_master_short(processed_video_paths, voice_path, bgm_path=None, s
     # Concatenate visual tracks
     final_video = concatenate_videoclips(clips, method="compose")
 
+    # Apply Burned-in Subtitles if SRT path provided
+    if srt_path and os.path.exists(srt_path):
+        final_video = add_dynamic_subtitles(final_video, srt_path)
+
     # Mix Audio Tracks (Voice: 200%, BGM: 40%, SFX: 50%)
     audio_tracks = [voice_audio]
 
@@ -237,7 +313,6 @@ def build_final_master_short(processed_video_paths, voice_path, bgm_path=None, s
         bgm = AudioFileClip(bgm_path)
         bgm = bgm.with_volume_scaled(0.4) if hasattr(bgm, "with_volume_scaled") else bgm.volumex(0.4)
         
-        # Loop music if shorter than voice, trim if longer
         if bgm.duration < target_duration:
             bgm = bgm.looped(duration=target_duration) if hasattr(bgm, "looped") else bgm.loop(duration=target_duration)
         else:
@@ -248,8 +323,6 @@ def build_final_master_short(processed_video_paths, voice_path, bgm_path=None, s
     if sfx_path and os.path.exists(sfx_path):
         sfx = AudioFileClip(sfx_path)
         sfx = sfx.with_volume_scaled(0.5) if hasattr(sfx, "with_volume_scaled") else sfx.volumex(0.5)
-        
-        # Play SFX at 0.5s hook entrance
         sfx = sfx.with_start(0.5) if hasattr(sfx, "with_start") else sfx.set_start(0.5)
         audio_tracks.append(sfx)
 
@@ -258,7 +331,7 @@ def build_final_master_short(processed_video_paths, voice_path, bgm_path=None, s
     final_video = final_video.with_audio(final_audio) if hasattr(final_video, "with_audio") else final_video.set_audio(final_audio)
 
     # Write final video file
-    print("🚀 Rendering master 1080x1920 Short with balanced audio...")
+    print("🚀 Rendering master 1080x1920 Short with balanced audio and subtitles...")
     final_video.write_videofile(
         output_filename,
         fps=30,

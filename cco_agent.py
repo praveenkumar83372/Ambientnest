@@ -5,9 +5,9 @@ Generates high-retention, 60-second viral scripts for YouTube Shorts using Groq 
 Responsibilities:
 1. Brainstorms and pitches novel content concepts to the CEO.
 2. Reads shared memory (channel_state.json) to learn from past video metrics and feedback.
-3. Writes high-hook 130-150 word narration scripts.
-4. Generates EXACTLY 20 scene descriptions (1 every 3 seconds) for the Visual Engine.
-5. Produces SEO titles, descriptions, and tag metadata.
+3. Writes high-hook 140-160 word narration scripts (~50-60s voice duration).
+4. Generates EXACTLY 20 scene descriptions (1 every 3 seconds) with specific entity keywords.
+5. Produces high-CTR SEO titles, descriptions, and tag metadata.
 """
 
 import os
@@ -21,13 +21,17 @@ CCO_SCRIPT_PROMPT = """
 You are the Chief Content Officer (CCO) of a high-RPM faceless YouTube Shorts channel focused on Wealth, Money, and Finance.
 
 YOUR MISSION:
-Write a fast-paced, high-stakes, high-retention 60-second video script (~130-150 words spoken narration).
+Write a fast-paced, high-stakes, high-retention video script.
 
 CRITICAL REQUIREMENTS:
-1. HOOK: First 3 seconds must grab instant attention (shocking dark truth, bold financial claim, high stakes).
-2. VISUAL PROMPTS: Provide EXACTLY 20 distinct visual scene descriptions (1 visual prompt for every 3-second scene).
-3. ANTI-REPEAT: Do NOT re-use ideas from recent topic history.
-4. METADATA: Generate a viral title (<70 chars ending with #Shorts), a high-conversion description, and 20 SEO tags.
+1. NARRATION WORD COUNT: The 'narration' MUST be between 140 and 160 words long (This is strictly required so spoken audio lasts 50-60 seconds).
+2. HOOK: First 3 seconds must grab instant attention (shocking dark truth, bold financial claim, high stakes).
+3. SPECIFIC CONTEXT VISUAL PROMPTS: Provide EXACTLY 20 distinct visual scene descriptions (1 prompt every 3 seconds). If specific figures (e.g., Elon Musk, Warren Buffett, Jeff Bezos) or concepts are mentioned in the narration, the visual prompt for that scene MUST include their exact name or specific scene keywords so stock search targets them accurately.
+4. ANTI-REPEAT: Do NOT re-use ideas from recent topic history.
+5. METADATA: 
+   - Title: Viral clickbait title under 70 characters ending with #Shorts.
+   - Description: 3-sentence summary with call-to-action + 5 relevant hashtags (#Shorts #Wealth #Finance #Money #Billionaires).
+   - Tags: Exactly 20 high-volume SEO search tags.
 
 STRICT JSON OUTPUT FORMAT ONLY (NO MARKDOWN OR EXTRA TEXT):
 {
@@ -35,11 +39,11 @@ STRICT JSON OUTPUT FORMAT ONLY (NO MARKDOWN OR EXTRA TEXT):
     "category": "Assigned strategy category",
     "title": "Shocking Title Here #Shorts",
     "description": "Engaging description summarizing key takeaways. Subscribe for daily wealth strategies! #Shorts #Finance #Money #Wealth #Investing",
-    "tags": ["finance", "money", "wealth", "business", "investing", "dark psychology", "passive income", "shorts"],
-    "narration": "Full 60-second continuous voiceover text here...",
+    "tags": ["finance", "money", "wealth", "business", "investing", "dark psychology", "passive income", "billionaires", "shorts", "elon musk", "warren buffett", "wealth secrets", "financial freedom", "mindset", "success", "crypto", "real estate", "stocks", "rich vs poor", "money rules"],
+    "narration": "Full 140 to 160 word continuous voiceover text here...",
     "visual_prompts": [
-        "Prompt 1 (0-3s): Cinematic close up of luxury gold bars in dark lighting",
-        "Prompt 2 (3-6s): Financial trader looking at glowing stock charts",
+        "Prompt 1 (0-3s): Elon Musk sitting in interview looking intense",
+        "Prompt 2 (3-6s): Cinematic close up of glowing stock market charts showing steep decline",
         ... exactly 20 items ...
     ]
 }
@@ -81,14 +85,14 @@ class ChiefContentOfficer:
                 response_format={"type": "json_object"}
             )
             pitch = json.loads(res.choices[0].message.content)
-            print(f"  📌 Pitched Topic: '{pitch.get('proposed_topic')}'")
+            print(f"   📌 Pitched Topic: '{pitch.get('proposed_topic')}'")
             return pitch
         except Exception as e:
             print(f"⚠️ CCO Pitch warning: {e}")
             return None
 
     def create_script(self, category, custom_directive=None):
-        """Generates the full 60-second script JSON payload."""
+        """Generates the full 60-second script JSON payload with strict word count."""
         state = load_state()
         recent_topics = get_topic_history_summary(state, max_items=10)
         deliberations = state.get("agent_deliberations", [])[:5]
@@ -101,7 +105,8 @@ class ChiefContentOfficer:
         RECENTLY USED TOPICS TO AVOID: {json.dumps(recent_topics)}
         AGENT MEMORY & CEO FEEDBACK: {json.dumps(deliberations)}
 
-        Task: Write a new 60-second financial script (~130-150 words) with EXACTLY 20 visual scene prompts.
+        CRITICAL WORD COUNT RULE: The narration MUST contain between 140 and 160 words. Count your words before returning!
+        Task: Write a new 60-second financial script with EXACTLY 20 context-matched visual scene prompts.
         """
 
         try:
@@ -117,12 +122,17 @@ class ChiefContentOfficer:
 
             script_payload = json.loads(res.choices[0].message.content)
 
+            # Check and log word count
+            narration_text = script_payload.get("narration", "")
+            word_count = len(narration_text.split())
+            print(f"📊 [CCO Agent] Script generated with {word_count} words (~{int(word_count/2.5)}s speech).")
+
             # Ensure strict 20 visual prompts count
             visuals = script_payload.get("visual_prompts", [])
             if len(visuals) != 20:
-                print(f"⚠️ Prompt count mismatch ({len(visuals)} received). Adjusting to 20...")
+                print(f"⚠️ Visual prompt count mismatch ({len(visuals)} received). Adjusting to 20...")
                 while len(visuals) < 20:
-                    visuals.append("Dark ambient cinematic stock video of luxury finance and money")
+                    visuals.append("Cinematic dark aesthetic clip of luxury wealth and finance")
                 script_payload["visual_prompts"] = visuals[:20]
 
             # Record generated topic into shared state memory
