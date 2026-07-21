@@ -34,8 +34,42 @@ except ImportError:
     MOVIEPY_V2 = False
 
 
+def download_background_music(mood="dark ambient", output_path="bg_music.mp3", freesound_api_key=None):
+    """Downloads dark ambient cinematic background music from Freesound API."""
+    if not freesound_api_key:
+        freesound_api_key = os.getenv("FREESOUND_API_KEY")
+
+    if not freesound_api_key:
+        print("⚠️ FREESOUND_API_KEY missing. Skipping background music download.")
+        return None
+
+    query = f"financial dark ambient cinematic {mood}"
+    url = (
+        f"https://freesound.org/apiv2/search/text/"
+        f"?query={requests.utils.quote(query)}"
+        f"&fields=id,name,previews,duration"
+        f"&token={freesound_api_key}&page_size=5"
+    )
+
+    try:
+        res = requests.get(url, timeout=20).json()
+        results = [r for r in (res.get("results") or []) if r.get("duration", 0) >= 30]
+        if results:
+            track = results[0]
+            preview_url = track["previews"].get("preview-hq-mp3") or track["previews"].get("preview-lq-mp3")
+            if preview_url:
+                audio_data = requests.get(preview_url, timeout=20).content
+                with open(output_path, "wb") as f:
+                    f.write(audio_data)
+                print(f"🎵 Downloaded Background Music: {track['name']}")
+                return output_path
+    except Exception as e:
+        print(f"⚠️ Background music fetch failed: {e}")
+    return None
+
+
 def add_dynamic_subtitles(video_clip, srt_path):
-    """Parses .srt file and overlays high-impact yellow text captions on top of the video."""
+    """Parses .srt file and overlays high-impact kinetic captions onto the video."""
     if not HAS_PYSRT or not os.path.exists(srt_path):
         print("⚠️ Subtitles skipped: pysrt not installed or .srt file missing.")
         return video_clip
@@ -43,6 +77,8 @@ def add_dynamic_subtitles(video_clip, srt_path):
     try:
         subs = pysrt.open(srt_path, encoding='utf-8')
         subtitle_clips = [video_clip]
+
+        keywords = ["$", "PERCENT", "BILLION", "MILLION", "DEBT", "BANK", "MONEY", "INFLATION", "WEALTH", "SECRET", "CRASH", "TAX", "BITCOIN", "FED"]
 
         for sub in subs:
             start_time = (sub.start.hours * 3600) + (sub.start.minutes * 60) + sub.start.seconds + (sub.start.milliseconds / 1000.0)
@@ -53,13 +89,16 @@ def add_dynamic_subtitles(video_clip, srt_path):
             if not text:
                 continue
 
+            is_highlight = any(kw in text for kw in keywords)
+            caption_color = "#00F0FF" if is_highlight else "yellow"
+
             if MOVIEPY_V2:
                 txt_clip = (
                     TextClip(
                         font="Arial-Bold",
                         text=text,
                         font_size=55,
-                        color="yellow",
+                        color=caption_color,
                         stroke_color="black",
                         stroke_width=3,
                         size=(900, None),
@@ -75,7 +114,7 @@ def add_dynamic_subtitles(video_clip, srt_path):
                         text,
                         font="Arial-Bold",
                         fontsize=55,
-                        color="yellow",
+                        color=caption_color,
                         stroke_color="black",
                         stroke_width=3,
                         size=(900, None),
@@ -106,7 +145,6 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
     if not os.path.exists(narration_path):
         raise FileNotFoundError(f"❌ Narration audio file not found: {narration_path}")
 
-    # Load Narration Audio and boost to 200%
     narration_audio = AudioFileClip(narration_path)
     if hasattr(narration_audio, "with_volume_scaled"):
         narration_audio = narration_audio.with_volume_scaled(2.0)
@@ -116,7 +154,6 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
     target_duration = narration_audio.duration
     print(f"⏱️ Video Duration target (Synced to Voice): {target_duration:.2f} seconds")
 
-    # Load visual clips up to exact target_duration
     processed_clips = []
     current_time = 0.0
 
@@ -125,20 +162,21 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
             if current_time >= target_duration:
                 break
 
-            file_path = asset["file_path"]
-            asset_type = asset["type"]
+            file_path = asset if isinstance(asset, str) else asset.get("file_path", "")
+            asset_type = "video" if file_path.endswith(".mp4") else "image"
             remaining_time = target_duration - current_time
 
             if asset_type == "video" and os.path.exists(file_path):
                 clip = VideoFileClip(file_path)
                 clip_dur = min(clip.duration, 3.0, remaining_time)
                 clip = clip.subclipped(0, clip_dur) if hasattr(clip, "subclipped") else clip.subclip(0, clip_dur)
-            else:
+            elif os.path.exists(file_path):
                 clip = ImageClip(file_path)
                 clip_dur = min(3.0, remaining_time)
                 clip = clip.with_duration(clip_dur) if hasattr(clip, "with_duration") else clip.set_duration(clip_dur)
+            else:
+                continue
 
-            # Resizing to 1080x1920 portrait
             if hasattr(clip, "resized"):
                 clip = clip.resized(height=1920)
                 if clip.w > 1080:
@@ -157,11 +195,9 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
 
     base_video = concatenate_videoclips(processed_clips, method="compose")
 
-    # Apply Subtitles Overlay
     if srt_path and os.path.exists(srt_path):
         base_video = add_dynamic_subtitles(base_video, srt_path)
 
-    # Audio Mixing: Voice (200%), BGM (40%)
     audio_tracks = [narration_audio]
 
     if music_path and os.path.exists(music_path):
@@ -176,8 +212,6 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
         audio_tracks.append(bg_audio)
 
     final_audio = CompositeAudioClip(audio_tracks)
-    
-    # FIX: Correct variable reference from base_video instead of final_video
     base_video = base_video.with_audio(final_audio) if hasattr(base_video, "with_audio") else base_video.set_audio(final_audio)
 
     base_video.write_videofile(
