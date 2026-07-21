@@ -67,6 +67,38 @@ class ChiefExecutiveOfficer:
                 "category": cco_pitch.get("target_category", "Wealth & Finance")
             }
 
+    def issue_daily_directive(self, cao_briefing=None):
+        """Generates executive daily directives based on CAO channel briefing."""
+        print("👔 [CEO Agent] Issuing daily strategic directive...")
+        state = load_state()
+        history = get_topic_history_summary(state, max_items=10)
+        
+        user_prompt = f"CAO Briefing: {json.dumps(cao_briefing)}. Recent history: {json.dumps(history)}. Formulate executive daily directive."
+
+        try:
+            res = self.client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": CEO_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                response_format={"type": "json_object"}
+            )
+            return json.loads(res.choices[0].message.content)
+        except Exception as e:
+            print(f"⚠️ CEO Issue Daily Directive warning: {e}")
+            return {
+                "decision": "APPROVED",
+                "executive_summary": "Focus on high-retention financial psychology hooks.",
+                "executive_directive": "Hook viewers in the first 3 seconds with shocking money truths.",
+                "category": "Wealth & Financial Psychology"
+            }
+
+    def generate_executive_directive(self, state=None):
+        """Alias to issue_daily_directive for backward compatibility."""
+        return self.issue_daily_directive(state)
+
     def analyze_channel_data(self, youtube_client, channel_id=None):
         """Fetches live channel analytics via YouTube Data API v3 and computes SEO strategy."""
         print("\n👔 [CEO Agent] Analyzing Live YouTube Channel Statistics & Performance...")
@@ -112,34 +144,6 @@ class ChiefExecutiveOfficer:
             print(f"⚠️ [CEO Agent] YouTube Analytics warning: {e}. Defaulting to baseline strategy.")
             return self._get_fallback_seo_strategy()
 
-    def generate_executive_directive(self, state=None):
-        """Generates AI executive directive using Groq Llama-3.3-70B."""
-        if not state:
-            state = load_state()
-
-        history = get_topic_history_summary(state, max_items=10)
-        user_prompt = f"Channel state history: {json.dumps(history)}. Formulate executive directives for today's video production."
-
-        try:
-            res = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": CEO_SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.7,
-                response_format={"type": "json_object"}
-            )
-            return json.loads(res.choices[0].message.content)
-        except Exception as e:
-            print(f"⚠️ CEO Directive error: {e}")
-            return {
-                "decision": "APPROVED",
-                "executive_summary": "Maintain high retention and fast-paced hook.",
-                "executive_directive": "Hook viewers within first 3 seconds with billionaire money facts.",
-                "category": "Wealth & Financial Psychology"
-            }
-
     def _get_fallback_seo_strategy(self):
         return {
             "channel_title": "Ambientnest Wealth",
@@ -156,6 +160,5 @@ class ChiefExecutiveOfficer:
 
 if __name__ == "__main__":
     ceo = ChiefExecutiveOfficer()
-    state = load_state()
-    directive = ceo.generate_executive_directive(state)
+    directive = ceo.issue_daily_directive()
     print("\n💾 Generated CEO Directive:\n", json.dumps(directive, indent=4))
