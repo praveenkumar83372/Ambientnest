@@ -4,7 +4,7 @@
     "metrics": {
         "subscribers": 0,
         "estimated_revenue_usd": 0.0,
-        "total_videos_published": 2,
+        "total_videos_published": 3,
         "current_target_usd": 1000.0
     },
     "category_rotation": {
@@ -18,6 +18,11 @@
     "history": [
         {
             "timestamp": "2026-07-21",
+            "topic": "Frugal Millionaires",
+            "category": "Wealth Creation and Personal Finance"
+        },
+        {
+            "timestamp": "2026-07-21",
             "topic": "Hidden Fees in Investment Portfolios",
             "category": "Money Breakdown & Visual Case Studies"
         },
@@ -27,9 +32,15 @@
             "category": "Personal Finance and Wealth Creation"
         }
     ],
-    "last_published_time": "2026-07-21T10:25:07.351260",
-    "last_updated": "2026-07-21T10:25:07.351281",
+    "last_published_time": "2026-07-21T10:32:10.490784",
+    "last_updated": "2026-07-21T10:32:10.490812",
     "agent_deliberations": [
+        {
+            "timestamp": "2026-07-21T10:25:07.351281",
+            "proposed_topic": "Frugal Millionaires: Exposing the Secret Lives of Extreme Savers",
+            "approved": true,
+            "ceo_feedback": "The proposed topic is unique, aligns with the channel's target category, and has the potential to attract high engagement due to its intriguing and inspirational nature, differentiating itself from recent topics."
+        },
         {
             "timestamp": "2026-07-21T09:07:02.093308",
             "proposed_topic": "Financial Freedom through Alternative Investments",
