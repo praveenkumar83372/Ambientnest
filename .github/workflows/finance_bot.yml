@@ -1,0 +1,69 @@
+name: Financial Short Automation Pipeline
+
+on:
+  schedule:
+    # Runs automatically twice daily (e.g., 08:00 UTC and 20:00 UTC)
+    - cron: '0 8,20 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build-and-generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install System Dependencies (FFmpeg & ImageMagick)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg imagemagick
+          # Fix Policy configuration for ImageMagick TextClip rendering
+          sudo sed -i 'r/policy domain="path" rights="none" pattern="@\*"/policy domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml || true
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore Channel State & Asset History Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            channel_state.json
+            asset_history.json
+            finance_sfx/cache.json
+          key: finance-channel-memory-${{ github.run_id }}
+          restore-keys: |
+            finance-channel-memory-
+
+      - name: Execute C-Suite Orchestration & Video Production
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          FREESOUND_API_KEY: ${{ secrets.FREESOUND_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          TOKEN_PICKLE_B64: ${{ secrets.TOKEN_PICKLE_B64 }}
+        run: |
+          # Decode YouTube OAuth Token Pickle if stored in Base64 secret
+          if [ -n "$TOKEN_PICKLE_B64" ]; then
+            echo "$TOKEN_PICKLE_B64" | base64 -d > token.pickle
+          fi
+          
+          # Run the master orchestrator pipeline
+          python orchestrator.py
+
+      - name: Commit & Push Updated Memory State
+        if: always()
+        run: |
+          git config --global user.name "FinanceBot Auto"
+          git config --global user.email "bot@github.actions"
+          git add channel_state.json asset_history.json || true
+          git commit -m "update: sync agent memory & topic state [skip ci]" || true
+          git push || true
