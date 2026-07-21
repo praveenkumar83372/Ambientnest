@@ -4,7 +4,7 @@
     "metrics": {
         "subscribers": 0,
         "estimated_revenue_usd": 0.0,
-        "total_videos_published": 1,
+        "total_videos_published": 2,
         "current_target_usd": 1000.0
     },
     "category_rotation": {
@@ -18,13 +18,24 @@
     "history": [
         {
             "timestamp": "2026-07-21",
+            "topic": "Hidden Fees in Investment Portfolios",
+            "category": "Money Breakdown & Visual Case Studies"
+        },
+        {
+            "timestamp": "2026-07-21",
             "topic": "Crypto Collapse: Top 5 Alternative Investments",
             "category": "Personal Finance and Wealth Creation"
         }
     ],
-    "last_published_time": "2026-07-21T09:07:02.093284",
-    "last_updated": "2026-07-21T09:07:02.093308",
+    "last_published_time": "2026-07-21T10:25:07.351260",
+    "last_updated": "2026-07-21T10:25:07.351281",
     "agent_deliberations": [
+        {
+            "timestamp": "2026-07-21T09:07:02.093308",
+            "proposed_topic": "Financial Freedom through Alternative Investments",
+            "approved": false,
+            "ceo_feedback": "The proposed topic, while timely, bears too much resemblance to our recent topic 'Crypto Collapse: Top 5 Alternative Investments', risking repetition and diminishing returns."
+        },
         {
             "timestamp": "2026-07-21T09:06:59.441899",
             "proposed_topic": "Crypto Collapse: Top 5 Alternative Investments",
