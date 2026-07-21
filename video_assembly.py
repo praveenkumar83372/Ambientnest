@@ -12,16 +12,34 @@ import subprocess
 import shutil as _shutil
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from moviepy.editor import (
-    VideoFileClip,
-    AudioFileClip,
-    ImageClip,
-    CompositeVideoClip,
-    CompositeAudioClip,
-    concatenate_videoclips,
-    TextClip
-)
-from moviepy.video.tools.subtitles import SubtitlesClip
+
+# MoviePy v1 vs v2 compatibility handler
+try:
+    from moviepy import (
+        VideoFileClip,
+        AudioFileClip,
+        ImageClip,
+        CompositeVideoClip,
+        CompositeAudioClip,
+        concatenate_videoclips,
+        TextClip
+    )
+except ImportError:
+    from moviepy.editor import (
+        VideoFileClip,
+        AudioFileClip,
+        ImageClip,
+        CompositeVideoClip,
+        CompositeAudioClip,
+        concatenate_videoclips,
+        TextClip
+    )
+
+try:
+    from moviepy.video.tools.subtitles import SubtitlesClip
+except ImportError:
+    SubtitlesClip = None
+
 
 def _find_ffmpeg():
     f = _shutil.which("ffmpeg")
@@ -33,7 +51,9 @@ def _find_ffmpeg():
             return p
     return "ffmpeg"
 
+
 FFMPEG = _find_ffmpeg()
+
 
 # --- 1. Background Music Fetcher ---
 def download_background_music(mood="dark ambient", output_path="bg_music.mp3", freesound_api_key=None):
@@ -76,13 +96,17 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
     print("\n🎬 [Video Assembly] Starting video composition with MoviePy...")
     processed_clips = []
 
-    # Process 20 assets to 1080x1920 3-second clips
+    # Process 20 assets into 1080x1920 3-second clips
     for asset in asset_list:
         file_path = asset["file_path"]
         asset_type = asset["type"]
 
-        if asset_type == "video":
-            clip = VideoFileClip(file_path).subclip(0, 3.0)
+        if asset_type == "video" and os.path.exists(file_path):
+            clip = VideoFileClip(file_path)
+            if clip.duration > 3.0:
+                clip = clip.subclip(0, 3.0)
+            elif clip.duration < 3.0:
+                clip = clip.loop(duration=3.0)
         else:
             clip = ImageClip(file_path).set_duration(3.0)
 
@@ -99,7 +123,7 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
 
     # Audio Mixing setup
     audio_tracks = []
-    
+
     # Narration Track
     if os.path.exists(narration_path):
         narration_audio = AudioFileClip(narration_path)
@@ -116,19 +140,18 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
         base_video = base_video.set_audio(final_audio)
 
     # Subtitle Generator Overlay
-    generator = lambda txt: TextClip(
-        txt,
-        font="Arial-Bold",
-        fontsize=52,
-        color="yellow",
-        stroke_color="black",
-        stroke_width=3,
-        method="caption",
-        size=(950, None)
-    )
-
-    if os.path.exists(srt_path):
+    if os.path.exists(srt_path) and SubtitlesClip is not None:
         try:
+            generator = lambda txt: TextClip(
+                txt,
+                font="Arial-Bold",
+                fontsize=52,
+                color="yellow",
+                stroke_color="black",
+                stroke_width=3,
+                method="caption",
+                size=(950, None)
+            )
             subtitles = SubtitlesClip(srt_path, generator)
             subtitles = subtitles.set_position(("center", 1400))
             final_video = CompositeVideoClip([base_video, subtitles])
@@ -138,7 +161,7 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
     else:
         final_video = base_video
 
-    # Render video file
+    # Render final video file
     final_video.write_videofile(
         output_path,
         fps=30,
@@ -200,5 +223,4 @@ if __name__ == "__main__":
         with open("current_script.json", "r") as f:
             script_data = json.load(f)
 
-        # Example usage test
         print(f"Ready to assemble: {script_data.get('title')}")

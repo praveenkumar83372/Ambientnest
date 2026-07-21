@@ -7,8 +7,14 @@ Ken Burns zoom effects to static photos for high visual retention.
 
 import os
 import shutil as _shutil
-from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
 from PIL import Image, ImageDraw, ImageFont
+
+# MoviePy v1 vs v2 compatibility handler
+try:
+    from moviepy import VideoFileClip, ImageClip, CompositeVideoClip
+except ImportError:
+    from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
+
 
 def _find_ffmpeg():
     f = _shutil.which("ffmpeg")
@@ -20,6 +26,7 @@ def _find_ffmpeg():
             return p
     return "ffmpeg"
 
+
 FFMPEG = _find_ffmpeg()
 
 
@@ -27,15 +34,15 @@ def create_placeholder_image(output_path, text="Financial Secret"):
     """Generates an aesthetic dark-themed financial fallback image if an asset download fails."""
     img = Image.new("RGB", (1080, 1920), color=(15, 23, 42))  # Dark slate background
     draw = ImageDraw.Draw(img)
-    
-    # Simple accent overlay
+
+    # Accent container box
     draw.rectangle([50, 800, 1030, 1120], fill=(30, 41, 59), outline=(234, 179, 8), width=3)
-    
+
     try:
         font = ImageFont.truetype("arial.ttf", 60)
     except Exception:
         font = ImageFont.load_default()
-        
+
     draw.text((540, 960), text, fill=(255, 255, 255), font=font, anchor="mm")
     img.save(output_path)
     return output_path
@@ -47,7 +54,7 @@ def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
     Prevents still images from feeling flat and boosts viewer retention.
     """
     img_clip = ImageClip(image_path).set_duration(duration)
-    
+
     # Scale to fill height 1920
     img_clip = img_clip.resize(height=target_size[1])
     if img_clip.w < target_size[0]:
@@ -61,7 +68,7 @@ def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
         return 1.0 + 0.05 * t
 
     zoomed_clip = img_clip.resize(zoom_func)
-    
+
     # Re-crop to lock bounding box at 1080x1920
     final_clip = CompositeVideoClip([zoomed_clip.set_position("center")], size=target_size).set_duration(duration)
     return final_clip
@@ -86,7 +93,7 @@ def process_scene_asset(asset_info, output_dir="temp_processed"):
         if asset_type == "video" and os.path.exists(raw_path):
             # Load raw video clip and trim to exactly 3.0 seconds
             clip = VideoFileClip(raw_path)
-            
+
             # Subclip to 3 seconds (or loop if shorter than 3s)
             if clip.duration < target_duration:
                 clip = clip.loop(duration=target_duration)
@@ -149,7 +156,7 @@ def process_all_visual_assets(asset_list):
     """Loops through all downloaded assets (20 scenes) and processes them sequentially."""
     print(f"\n🖼️ [Visual Engine] Processing {len(asset_list)} visual scenes into 3.0s 1080x1920 clips...")
     processed_paths = []
-    
+
     for asset in asset_list:
         out_path = process_scene_asset(asset)
         processed_paths.append(out_path)
@@ -159,7 +166,6 @@ def process_all_visual_assets(asset_list):
 
 
 if __name__ == "__main__":
-    # Test script for visual engine
     test_asset = {
         "scene_index": 0,
         "file_path": "test.jpg",

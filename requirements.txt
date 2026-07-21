@@ -1,6 +1,6 @@
 groq
 edge-tts
-moviepy
+moviepy>=2.0.0
 requests
 python-dotenv
 google-api-python-client
