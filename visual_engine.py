@@ -9,7 +9,7 @@ import os
 import shutil as _shutil
 from PIL import Image, ImageDraw, ImageFont
 
-# MoviePy v1 vs v2 compatibility handler
+# MoviePy compatibility handler
 try:
     from moviepy import VideoFileClip, ImageClip, CompositeVideoClip
 except ImportError:
@@ -35,7 +35,6 @@ def create_placeholder_image(output_path, text="Financial Secret"):
     img = Image.new("RGB", (1080, 1920), color=(15, 23, 42))  # Dark slate background
     draw = ImageDraw.Draw(img)
 
-    # Accent container box
     draw.rectangle([50, 800, 1030, 1120], fill=(30, 41, 59), outline=(234, 179, 8), width=3)
 
     try:
@@ -51,27 +50,41 @@ def create_placeholder_image(output_path, text="Financial Secret"):
 def apply_ken_burns_effect(image_path, duration=3.0, target_size=(1080, 1920)):
     """
     Applies a smooth dynamic zoom-in (Ken Burns) effect to static photos.
-    Prevents still images from feeling flat and boosts viewer retention.
+    Uses MoviePy v2 compatible helper methods.
     """
-    img_clip = ImageClip(image_path).set_duration(duration)
+    img_clip = ImageClip(image_path)
+    
+    # Duration setting (v2 vs v1)
+    if hasattr(img_clip, "with_duration"):
+        img_clip = img_clip.with_duration(duration)
+    else:
+        img_clip = img_clip.set_duration(duration)
 
-    # Scale to fill height 1920
-    img_clip = img_clip.resize(height=target_size[1])
-    if img_clip.w < target_size[0]:
-        img_clip = img_clip.resize(width=target_size[0])
+    # Resizing to 1920 height
+    if hasattr(img_clip, "resized"):
+        img_clip = img_clip.resized(height=target_size[1])
+        if img_clip.w < target_size[0]:
+            img_clip = img_clip.resized(width=target_size[0])
+        
+        # Center crop
+        img_clip = img_clip.cropped(x_center=img_clip.w / 2, y_center=img_clip.h / 2, width=1080, height=1920)
+        
+        # Zoom function
+        zoomed_clip = img_clip.resized(lambda t: 1.0 + 0.05 * t)
+        pos_clip = zoomed_clip.with_position("center") if hasattr(zoomed_clip, "with_position") else zoomed_clip.set_position("center")
+        final_clip = CompositeVideoClip([pos_clip], size=target_size)
+        return final_clip.with_duration(duration) if hasattr(final_clip, "with_duration") else final_clip.set_duration(duration)
+    
+    else:
+        # Legacy MoviePy v1 fallback
+        img_clip = img_clip.resize(height=target_size[1])
+        if img_clip.w < target_size[0]:
+            img_clip = img_clip.resize(width=target_size[0])
 
-    # Crop center to exactly 1080x1920
-    img_clip = img_clip.crop(x_center=img_clip.w / 2, y_center=img_clip.h / 2, width=1080, height=1920)
-
-    # Dynamic zoom function: scales smoothly from 1.0 to 1.15 over duration
-    def zoom_func(t):
-        return 1.0 + 0.05 * t
-
-    zoomed_clip = img_clip.resize(zoom_func)
-
-    # Re-crop to lock bounding box at 1080x1920
-    final_clip = CompositeVideoClip([zoomed_clip.set_position("center")], size=target_size).set_duration(duration)
-    return final_clip
+        img_clip = img_clip.crop(x_center=img_clip.w / 2, y_center=img_clip.h / 2, width=1080, height=1920)
+        zoomed_clip = img_clip.resize(lambda t: 1.0 + 0.05 * t)
+        final_clip = CompositeVideoClip([zoomed_clip.set_position("center")], size=target_size)
+        return final_clip.set_duration(duration)
 
 
 def process_scene_asset(asset_info, output_dir="temp_processed"):
@@ -91,23 +104,28 @@ def process_scene_asset(asset_info, output_dir="temp_processed"):
 
     try:
         if asset_type == "video" and os.path.exists(raw_path):
-            # Load raw video clip and trim to exactly 3.0 seconds
             clip = VideoFileClip(raw_path)
 
-            # Subclip to 3 seconds (or loop if shorter than 3s)
-            if clip.duration < target_duration:
-                clip = clip.loop(duration=target_duration)
+            # MoviePy v2 subclip vs subclipped
+            if hasattr(clip, "subclipped"):
+                clip = clip.subclipped(0, target_duration) if clip.duration >= target_duration else clip
+            elif hasattr(clip, "subclip"):
+                clip = clip.subclip(0, target_duration) if clip.duration >= target_duration else clip
+
+            # MoviePy v2 resize vs resized
+            if hasattr(clip, "resized"):
+                clip = clip.resized(height=1920)
+                if clip.w > 1080:
+                    clip = clip.cropped(x_center=clip.w / 2, width=1080)
+                elif clip.w < 1080:
+                    clip = clip.resized(width=1080)
             else:
-                clip = clip.subclip(0, target_duration)
+                clip = clip.resize(height=1920)
+                if clip.w > 1080:
+                    clip = clip.crop(x_center=clip.w / 2, width=1080)
+                elif clip.w < 1080:
+                    clip = clip.resize(width=1080)
 
-            # Format to 1080x1920 portrait
-            clip = clip.resize(height=1920)
-            if clip.w > 1080:
-                clip = clip.crop(x_center=clip.w / 2, width=1080)
-            elif clip.w < 1080:
-                clip = clip.resize(width=1080)
-
-            # Render processed clip clip
             clip.write_videofile(
                 output_path,
                 fps=30,
@@ -119,7 +137,6 @@ def process_scene_asset(asset_info, output_dir="temp_processed"):
             clip.close()
 
         else:
-            # Static photo processing with Ken Burns zoom effect
             if not os.path.exists(raw_path):
                 raw_path = create_placeholder_image(f"temp_placeholder_{idx}.jpg")
 
@@ -163,13 +180,3 @@ def process_all_visual_assets(asset_list):
 
     print("✅ All 20 visual scenes successfully processed and standardized!")
     return processed_paths
-
-
-if __name__ == "__main__":
-    test_asset = {
-        "scene_index": 0,
-        "file_path": "test.jpg",
-        "type": "image",
-        "target_duration": 3.0
-    }
-    process_scene_asset(test_asset)
