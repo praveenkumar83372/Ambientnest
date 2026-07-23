@@ -1,7 +1,8 @@
 """
 Chief Content Officer (CCO) Agent
 Generates high-retention, high-research 60-second viral scripts for YouTube Shorts.
-Features dynamic morning/evening news hooks and category rotation.
+Features dynamic morning/evening news hooks, category rotation, billionaire case studies,
+and 'Save vs. Don't Save' financial comparison frameworks.
 """
 
 import os
@@ -19,11 +20,18 @@ You are the Chief Content Officer (CCO) of 'Ambientnest Wealth' — an elite, hi
 YOUR MISSION:
 Write a fast-paced, highly accurate, deep-dive financial script (~140-160 words spoken narration).
 
+CONTENT ANGLE PILLARS (Strictly align script with the ASSIGNED CATEGORY):
+1. BILLIONAIRE / TRILLIONAIRE STORIES & LESSONS (e.g., Warren Buffett's frugality, Elon Musk's capital allocation, Rockefeller's 3-account tax rule, BlackRock asset moves).
+2. "SAVE VS. DON'T SAVE" EXPERIMENTS (e.g., Saving $100/mo at 20 vs 30, Cash in bank vs. assets over 5 years, Inflation devaluing savings).
+3. PRACTICAL SAVING RULES & WEALTH HABITS (e.g., 50/30/20 budget, 24-hour impulse buying rule, eliminating hidden subscription leaks).
+4. MACROECONOMICS & DARK BANKING SECRETS (e.g., How central bank rate changes trap middle class in debt, fractional reserve secrets).
+5. CRYPTO & DIGITAL ASSETS (Bitcoin hedging, blockchain supply limits — ONLY when Crypto category is active).
+
 CRITICAL METADATA & CONTENT RULES:
 1. SCRIPT NARRATION (140-160 Words):
    - URGENT HOOK: The opening 3 seconds MUST leverage current breaking business news context matching the target time of day.
-   - VARIETY REQUIREMENT: Do NOT focus exclusively on Bitcoin unless assigned to the Crypto category. Incorporate banking secrets, billionaire moves (Warren Buffett, BlackRock), inflation, taxes, or market trends.
-   - Spoken narration MUST be 140 to 160 words so spoken audio runs 50-58 seconds continuously.
+   - VARIETY REQUIREMENT: Do NOT focus exclusively on Bitcoin unless assigned to the Crypto category.
+   - Spoken narration MUST be strictly between 140 and 160 words so spoken audio runs ~50-58 seconds continuously.
 
 2. TITLE FORMAT:
    - High-CTR hook title WITH EMOJIS under 70 characters ending with #Shorts #Ambientnest.
@@ -89,15 +97,16 @@ class ChiefContentOfficer:
         ASSIGNED CATEGORY: {category}
         TIME-OF-DAY CONTEXT: {news_context_label} (Example hook opening: "{hook_prefix_example}")
         {"SPECIFIC DIRECTIVE: " + custom_directive if custom_directive else ""}
-        RECENT TOPICS TO AVOID (DO NOT REPEAT BITCOIN IF RECENTLY COVERED): {json.dumps(recent_topics)}
+        RECENT TOPICS TO AVOID (DO NOT REPEAT BITCOIN OR RECENT TOPICS): {json.dumps(recent_topics)}
 
         BREAKING NEWS HEADLINES ({news_context_label}):
         {news_bullets}
 
-        STRICT RULES:
-        1. Narration MUST be between 140 and 160 words.
-        2. DO NOT write about Bitcoin unless the category explicitly specifies Crypto. Rotate into banking, real estate, central banks, or billionaire habits.
-        3. Match the hook phrasing to the time of day ({news_context_label}).
+        STRICT SCRIPTWRITING INSTRUCTIONS:
+        1. Spoken narration MUST be between 140 and 160 words total.
+        2. DO NOT write about Bitcoin unless the assigned category is explicitly Crypto. Focus heavily on billionaire moves, Save vs Don't Save math, or banking hacks.
+        3. Match the opening hook phrasing to the time of day context ({news_context_label}).
+        4. Provide exactly 20 visual prompts.
         """
 
         try:
@@ -116,7 +125,7 @@ class ChiefContentOfficer:
             word_count = len(narration_text.split())
             print(f"📊 [CCO Agent] Script generated with {word_count} words for category '{category}'.")
 
-            # Ensure 20 visual prompts
+            # Ensure 20 visual prompts are present
             visuals = script_payload.get("visual_prompts", [])
             while len(visuals) < 20:
                 visuals.append("Cinematic dark aesthetic clip of Ambientnest wealth and finance")
