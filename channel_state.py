@@ -1,6 +1,6 @@
 """
 Channel State Management Module
-Tracks topic history, agent deliberations, and enforces high-RPM category rotation
+Tracks topic history, agent deliberations, channel metrics, and enforces high-RPM category rotation
 including Billionaire Case Studies and 'Save vs. Don't Save' financial comparisons.
 """
 
@@ -28,7 +28,8 @@ def load_state():
             "total_videos": 0,
             "category_index": 0,
             "topic_history": [],
-            "agent_deliberations": []
+            "agent_deliberations": [],
+            "metrics": {}
         }
     try:
         with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -39,7 +40,8 @@ def load_state():
             "total_videos": 0,
             "category_index": 0,
             "topic_history": [],
-            "agent_deliberations": []
+            "agent_deliberations": [],
+            "metrics": {}
         }
 
 
@@ -82,3 +84,14 @@ def get_topic_history_summary(state, max_items=10):
     """Returns recent topics list for LLM context to prevent repeating subjects."""
     history = state.get("topic_history", [])
     return [item.get("topic", "") for item in history[-max_items:]]
+
+
+def update_channel_metrics(state, new_metrics):
+    """Updates stored channel performance analytics metrics."""
+    if "metrics" not in state:
+        state["metrics"] = {}
+    
+    state["metrics"].update(new_metrics)
+    save_state(state)
+    print("📈 Channel performance metrics updated in state.")
+    return state
