@@ -90,13 +90,18 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 1,
-    "total_videos": 1,
+    "category_index": 2,
+    "total_videos": 2,
     "topic_history": [
         {
             "video_number": 1,
             "topic": "Wealth Preservation Strategies of Billionaires",
             "category": "Wealth Psychology & Dark Banking Secrets"
+        },
+        {
+            "video_number": 2,
+            "topic": "Billionaire Lessons on Inflation and Market Volatility",
+            "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
         }
     ]
 }
