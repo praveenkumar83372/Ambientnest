@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 0,
-    "total_videos": 7,
+    "category_index": 1,
+    "total_videos": 8,
     "topic_history": [
         {
             "video_number": 1,
@@ -127,6 +127,11 @@
             "video_number": 7,
             "topic": "Frugal Millionaires' Practical Money Habits in Times of Inflation",
             "category": "Frugal Millionaires & Practical Money Habits"
+        },
+        {
+            "video_number": 8,
+            "topic": "Wealth Psychology and Dark Banking Secrets: Navigating Inflation",
+            "category": "Wealth Psychology & Dark Banking Secrets"
         }
     ]
 }
