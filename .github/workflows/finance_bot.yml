@@ -1,11 +1,13 @@
-name: Financial Short Automation Pipeline
+name: Financial Video Automation Pipeline
 
 on:
   schedule:
-    # Runs daily in the morning at 07:00 UTC (12:30 PM IST) for news-backed scripts
-    # And evening at 18:00 UTC (11:30 PM IST) for global evening audience peak
-    - cron: '0 7,18 * * *'
-  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
+    # 1. Morning Short: 01:30 UTC = 07:00 AM IST (Morning commuting peak)
+    # 2. Daily Long-Form Video: 08:30 UTC = 02:00 PM IST (Midday upload for evening watch time)
+    # 3. Evening Short: 13:00 UTC = 06:30 PM IST (Global & India prime-time peak)
+    - cron: '30 1,8 * * *'
+    - cron: '0 13 * * *'
+  workflow_dispatch: # Allows manual triggers anytime from the GitHub Actions tab
 
 jobs:
   build-and-generate:
@@ -21,10 +23,10 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
-      - name: Install System Dependencies (FFmpeg & ImageMagick)
+      - name: Install System Dependencies (FFmpeg, ImageMagick & Espeak)
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg imagemagick
+          sudo apt-get install -y ffmpeg imagemagick espeak
           # Fix security policy configuration for ImageMagick TextClip rendering in MoviePy
           sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml || true
           sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/g' /etc/ImageMagick-6/policy.xml || true
@@ -58,7 +60,7 @@ jobs:
             echo "$TOKEN_PICKLE_B64" | base64 -d > token.pickle
           fi
           
-          # Run the master orchestrator pipeline (News Scraper -> CCO -> Visual Engine -> CEO Scheduled Upload)
+          # Execute the master orchestration pipeline
           python orchestrator.py
 
       - name: Commit & Push Updated Memory State
