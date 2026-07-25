@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 6,
-    "total_videos": 6,
+    "category_index": 0,
+    "total_videos": 7,
     "topic_history": [
         {
             "video_number": 1,
@@ -122,6 +122,11 @@
             "video_number": 6,
             "topic": "Billionaire Moves to Hedge Against Inflation and Market Volatility",
             "category": "Crypto, AI Tech & Digital Wealth Creation"
+        },
+        {
+            "video_number": 7,
+            "topic": "Frugal Habits of Millionaires in Times of Inflation",
+            "category": "Frugal Millionaires & Practical Money Habits"
         }
     ]
 }
