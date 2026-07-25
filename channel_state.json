@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 5,
-    "total_videos": 5,
+    "category_index": 6,
+    "total_videos": 6,
     "topic_history": [
         {
             "video_number": 1,
@@ -117,6 +117,11 @@
             "video_number": 5,
             "topic": "Inflation Shields and Macroeconomic Insights",
             "category": "Macroeconomics, Inflation Shields & Real Estate"
+        },
+        {
+            "video_number": 6,
+            "topic": "Billionaire Moves to Hedge Against Inflation and Market Volatility",
+            "category": "Crypto, AI Tech & Digital Wealth Creation"
         }
     ]
 }
