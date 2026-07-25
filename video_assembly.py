@@ -1,10 +1,11 @@
 """
-Financial Short Assembly Engine & YouTube Uploader
+Financial Video Assembly Engine & YouTube Uploader
 Combines visual clips, narration, background music, and dynamic SRT captions 
-into a final 1080x1920 MP4 file paced strictly to voice length, then posts to YouTube.
+into a final MP4 file, posts to YouTube, and triggers an automated comment.
 """
 
 import os
+import time
 import base64
 import pickle
 import requests
@@ -228,7 +229,7 @@ def assemble_final_video(asset_list, narration_path="narration.mp3", srt_path="s
     for c in processed_clips:
         c.close()
 
-    print(f"✅ Master Short compiled successfully: {output_path}")
+    print(f"✅ Master Video compiled successfully: {output_path}")
     return output_path
 
 
@@ -256,8 +257,46 @@ def get_authenticated_youtube_service():
         return None
 
 
-def upload_to_youtube(video_path, title, description, tags, publish_at=None):
-    """Uploads compiled video to YouTube with complete SEO metadata."""
+def post_automated_comment(video_id, comment_text, delay_seconds=120):
+    """
+    Waits specified delay (default 2 minutes / 120s) and posts an automated comment
+    on the published video to boost early engagement signals.
+    """
+    youtube = get_authenticated_youtube_service()
+    if not youtube or not video_id:
+        print("⚠️ Skipping comment posting (missing YouTube service or video ID).")
+        return None
+
+    print(f"⏳ Waiting {delay_seconds} seconds (2 minutes) before posting automated first comment...")
+    time.sleep(delay_seconds)
+
+    try:
+        comment_body = {
+            "snippet": {
+                "videoId": video_id,
+                "topLevelComment": {
+                    "snippet": {
+                        "textOriginal": comment_text
+                    }
+                }
+            }
+        }
+        
+        response = youtube.commentThreads().insert(
+            part="snippet",
+            body=comment_body
+        ).execute()
+
+        print(f"💬 Automated first comment posted successfully on video ID: {video_id}!")
+        return response
+
+    except Exception as e:
+        print(f"⚠️ Failed to post automated comment: {e}")
+        return None
+
+
+def upload_to_youtube(video_path, title, description, tags, publish_at=None, pinned_comment=None):
+    """Uploads compiled video to YouTube with complete SEO metadata and posts a pinned comment after 2 minutes."""
     youtube = get_authenticated_youtube_service()
     if not youtube:
         print("⚠️ Skipping YouTube upload due to missing authentication.")
@@ -297,6 +336,16 @@ def upload_to_youtube(video_path, title, description, tags, publish_at=None):
         response = request.execute()
         video_id = response.get("id")
         print(f"🎉 Upload successful! Video ID: {video_id}")
+
+        # Post automated comment 2 minutes after upload
+        if video_id:
+            if not pinned_comment:
+                pinned_comment = (
+                    "Which of these wealth strategies are you applying today? Drop your thoughts below! 👇\n\n"
+                    "Subscribe to @Ambientnest for daily deep-dive wealth secrets!"
+                )
+            post_automated_comment(video_id, pinned_comment, delay_seconds=120)
+
         return video_id
 
     except Exception as e:
