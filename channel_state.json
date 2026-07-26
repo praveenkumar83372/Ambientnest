@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 4,
-    "total_videos": 11,
+    "category_index": 5,
+    "total_videos": 12,
     "topic_history": [
         {
             "video_number": 1,
@@ -147,6 +147,11 @@
             "video_number": 11,
             "topic": "Billionaire Portfolio Allocations and Liquidity Shifts",
             "category": "Credit Cards, Debt Hacking & Tax Avoidance Secrets"
+        },
+        {
+            "video_number": 12,
+            "topic": "Inflation Shields and Macroeconomic Insights",
+            "category": "Macroeconomics, Inflation Shields & Real Estate"
         }
     ]
 }
