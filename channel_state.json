@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 6,
-    "total_videos": 13,
+    "category_index": 0,
+    "total_videos": 14,
     "topic_history": [
         {
             "video_number": 1,
@@ -157,6 +157,11 @@
             "video_number": 13,
             "topic": "Billionaire Strategies for Navigating Economic Shifts",
             "category": "Crypto, AI Tech & Digital Wealth Creation"
+        },
+        {
+            "video_number": 14,
+            "topic": "Frugal Millionaires and Practical Money Habits in a Low Inflation Environment",
+            "category": "Frugal Millionaires & Practical Money Habits"
         }
     ]
 }
