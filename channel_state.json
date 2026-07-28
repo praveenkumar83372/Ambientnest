@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 3,
-    "total_videos": 17,
+    "category_index": 4,
+    "total_videos": 18,
     "topic_history": [
         {
             "video_number": 1,
@@ -177,6 +177,11 @@
             "video_number": 17,
             "topic": "Billionaire Portfolio Allocation Shifts and Save vs. Don't Save Experiments",
             "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
+        },
+        {
+            "video_number": 18,
+            "topic": "Debt Hacking and Tax Avoidance Secrets of Billionaires",
+            "category": "Credit Cards, Debt Hacking & Tax Avoidance Secrets"
         }
     ]
 }
