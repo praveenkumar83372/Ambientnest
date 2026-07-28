@@ -2,12 +2,12 @@ name: Financial Video Automation Pipeline
 
 on:
   schedule:
-    # 1. Morning Short: 01:30 UTC = 07:00 AM IST (Morning commuting peak)
-    # 2. Daily Long-Form Video: 08:30 UTC = 02:00 PM IST (Midday upload for evening watch time)
-    # 3. Evening Short: 13:00 UTC = 06:30 PM IST (Global & India prime-time peak)
+    # 1. Morning Short: 01:30 UTC = 07:00 AM IST
+    # 2. Daily Long-Form Video: 08:30 UTC = 02:00 PM IST
+    # 3. Evening Short: 13:00 UTC = 06:30 PM IST
     - cron: '30 1,8 * * *'
     - cron: '0 13 * * *'
-  workflow_dispatch: # Allows manual triggers anytime from the GitHub Actions tab
+  workflow_dispatch: # Allows manual triggers anytime from GitHub
 
 jobs:
   build-and-generate:
@@ -55,13 +55,18 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           TOKEN_PICKLE_B64: ${{ secrets.TOKEN_PICKLE_B64 }}
         run: |
-          # Decode YouTube OAuth Token Pickle if stored in Base64 secret
           if [ -n "$TOKEN_PICKLE_B64" ]; then
             echo "$TOKEN_PICKLE_B64" | base64 -d > token.pickle
           fi
-          
-          # Execute the master orchestration pipeline
-          python orchestrator.py
+
+          CURRENT_HOUR=$(date -u +%H)
+          if [ "$CURRENT_HOUR" -eq "08" ]; then
+            echo "🎬 Running 10-Minute Long-Form Documentary Engine..."
+            python longform_orchestrator.py
+          else
+            echo "📱 Running 20-Second Short Engine..."
+            python orchestrator.py
+          fi
 
       - name: Commit & Push Updated Memory State
         if: always()
