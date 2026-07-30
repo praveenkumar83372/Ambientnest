@@ -90,8 +90,8 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 2,
-    "total_videos": 23,
+    "category_index": 3,
+    "total_videos": 24,
     "topic_history": [
         {
             "video_number": 1,
@@ -207,6 +207,11 @@
             "video_number": 23,
             "topic": "Billionaire Wealth Preservation Strategies",
             "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
+        },
+        {
+            "video_number": 24,
+            "topic": "Save vs. Don't Save Experiments: The Billionaire Math",
+            "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
         }
     ]
 }
