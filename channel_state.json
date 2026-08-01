@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 2,
-    "total_videos": 30,
+    "category_index": 3,
+    "total_videos": 31,
     "topic_history": [
-        {
-            "video_number": 6,
-            "topic": "Billionaire Moves to Hedge Against Inflation and Market Volatility",
-            "category": "Crypto, AI Tech & Digital Wealth Creation"
-        },
         {
             "video_number": 7,
             "topic": "Frugal Millionaires' Practical Money Habits in Times of Inflation",
@@ -217,6 +212,11 @@
             "video_number": 30,
             "topic": "Billionaire Wealth Lessons from Central Bank Moves",
             "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
+        },
+        {
+            "video_number": 31,
+            "topic": "Save vs. Don't Save Experiments: The Power of Compound Interest",
+            "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
         }
     ]
 }
