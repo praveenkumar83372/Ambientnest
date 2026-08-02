@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 5,
-    "total_videos": 33,
+    "category_index": 6,
+    "total_videos": 34,
     "topic_history": [
-        {
-            "video_number": 9,
-            "topic": "Billionaire Strategies for Navigating Inflation",
-            "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
-        },
         {
             "video_number": 10,
             "topic": "Morning Inflation Update and Save vs. Don't Save Experiments",
@@ -217,6 +212,11 @@
             "video_number": 33,
             "topic": "Central Banks' Influence on Interest Rates and Billionaire Wealth",
             "category": "Macroeconomics, Inflation Shields & Real Estate"
+        },
+        {
+            "video_number": 34,
+            "topic": "Elon Musk's Trillionaire Status Loss and Central Bank Moves",
+            "category": "Crypto, AI Tech & Digital Wealth Creation"
         }
     ]
 }
