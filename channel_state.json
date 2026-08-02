@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 6,
-    "total_videos": 34,
+    "category_index": 0,
+    "total_videos": 35,
     "topic_history": [
-        {
-            "video_number": 10,
-            "topic": "Morning Inflation Update and Save vs. Don't Save Experiments",
-            "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
-        },
         {
             "video_number": 11,
             "topic": "Billionaire Portfolio Allocations and Liquidity Shifts",
@@ -217,6 +212,11 @@
             "video_number": 34,
             "topic": "Elon Musk's Trillionaire Status Loss and Central Bank Moves",
             "category": "Crypto, AI Tech & Digital Wealth Creation"
+        },
+        {
+            "video_number": 35,
+            "topic": "Frugal Millionaires and Practical Money Habits",
+            "category": "Frugal Millionaires & Practical Money Habits"
         }
     ]
 }
