@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 5,
-    "total_videos": 40,
+    "category_index": 6,
+    "total_videos": 41,
     "topic_history": [
-        {
-            "video_number": 16,
-            "topic": "Billionaire Investment Strategies in a Shifting Economic Landscape",
-            "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
-        },
         {
             "video_number": 17,
             "topic": "Billionaire Portfolio Allocation Shifts and Save vs. Don't Save Experiments",
@@ -217,6 +212,11 @@
             "video_number": 40,
             "topic": "Macroeconomics and Inflation Shields",
             "category": "Macroeconomics, Inflation Shields & Real Estate"
+        },
+        {
+            "video_number": 41,
+            "topic": "Ray Dalio's Warning and Billionaire Wealth Strategies",
+            "category": "Crypto, AI Tech & Digital Wealth Creation"
         }
     ]
 }
