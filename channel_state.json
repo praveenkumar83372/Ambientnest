@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 6,
-    "total_videos": 41,
+    "category_index": 0,
+    "total_videos": 42,
     "topic_history": [
-        {
-            "video_number": 17,
-            "topic": "Billionaire Portfolio Allocation Shifts and Save vs. Don't Save Experiments",
-            "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
-        },
         {
             "video_number": 18,
             "topic": "Debt Hacking and Tax Avoidance Secrets of Billionaires",
@@ -217,6 +212,11 @@
             "video_number": 41,
             "topic": "Ray Dalio's Warning and Billionaire Wealth Strategies",
             "category": "Crypto, AI Tech & Digital Wealth Creation"
+        },
+        {
+            "video_number": 42,
+            "topic": "Frugal Millionaires and Practical Money Habits: Lessons from Billionaires",
+            "category": "Frugal Millionaires & Practical Money Habits"
         }
     ]
 }
