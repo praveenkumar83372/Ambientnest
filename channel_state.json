@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 3,
-    "total_videos": 45,
+    "category_index": 4,
+    "total_videos": 46,
     "topic_history": [
-        {
-            "video_number": 21,
-            "topic": "Practical Money Habits of Frugal Millionaires",
-            "category": "Frugal Millionaires & Practical Money Habits"
-        },
         {
             "video_number": 22,
             "topic": "Central Banks and Billionaire Wealth Preservation Strategies",
@@ -217,6 +212,11 @@
             "video_number": 45,
             "topic": "Billionaire Wealth Strategies: Save vs. Don't Save Experiments",
             "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
+        },
+        {
+            "video_number": 46,
+            "topic": "Billionaire Debt Hacking Strategies and Tax Avoidance Secrets",
+            "category": "Credit Cards, Debt Hacking & Tax Avoidance Secrets"
         }
     ]
 }
