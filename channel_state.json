@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 3,
-    "total_videos": 59,
+    "category_index": 4,
+    "total_videos": 60,
     "topic_history": [
-        {
-            "video_number": 35,
-            "topic": "Frugal Millionaires and Practical Money Habits",
-            "category": "Frugal Millionaires & Practical Money Habits"
-        },
         {
             "video_number": 36,
             "topic": "Wealth Psychology and Dark Banking Secrets: Billionaire Moves",
@@ -217,6 +212,11 @@
             "video_number": 59,
             "topic": "The Power of Compound Interest in Saving vs. Don't Save Experiments",
             "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
+        },
+        {
+            "video_number": 60,
+            "topic": "Debt Hacking and Tax Avoidance Secrets of Billionaires",
+            "category": "Credit Cards, Debt Hacking & Tax Avoidance Secrets"
         }
     ]
 }
