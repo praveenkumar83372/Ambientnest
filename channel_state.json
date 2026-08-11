@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 4,
-    "total_videos": 60,
+    "category_index": 5,
+    "total_videos": 61,
     "topic_history": [
-        {
-            "video_number": 36,
-            "topic": "Wealth Psychology and Dark Banking Secrets: Billionaire Moves",
-            "category": "Wealth Psychology & Dark Banking Secrets"
-        },
         {
             "video_number": 37,
             "topic": "Billionaire Lessons from Central Bank Moves and Interest Rates",
@@ -217,6 +212,11 @@
             "video_number": 60,
             "topic": "Debt Hacking and Tax Avoidance Secrets of Billionaires",
             "category": "Credit Cards, Debt Hacking & Tax Avoidance Secrets"
+        },
+        {
+            "video_number": 61,
+            "topic": "Macroeconomic Insights and Inflation Shields",
+            "category": "Macroeconomics, Inflation Shields & Real Estate"
         }
     ]
 }
