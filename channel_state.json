@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 5,
-    "total_videos": 61,
+    "category_index": 6,
+    "total_videos": 62,
     "topic_history": [
-        {
-            "video_number": 37,
-            "topic": "Billionaire Lessons from Central Bank Moves and Interest Rates",
-            "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
-        },
         {
             "video_number": 38,
             "topic": "Save vs. Don't Save Experiments: Compound Interest & Asset Math",
@@ -217,6 +212,11 @@
             "video_number": 61,
             "topic": "Macroeconomic Insights and Inflation Shields",
             "category": "Macroeconomics, Inflation Shields & Real Estate"
+        },
+        {
+            "video_number": 62,
+            "topic": "Billionaire Wealth Strategies and Market Insights",
+            "category": "Crypto, AI Tech & Digital Wealth Creation"
         }
     ]
 }
