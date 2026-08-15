@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 1,
-    "total_videos": 71,
+    "category_index": 2,
+    "total_videos": 72,
     "topic_history": [
-        {
-            "video_number": 47,
-            "topic": "Macroeconomic Insights from Billionaire Moves",
-            "category": "Macroeconomics, Inflation Shields & Real Estate"
-        },
         {
             "video_number": 48,
             "topic": "Palantir's 30% Stock Rally and Billionaire Wealth Creation",
@@ -217,6 +212,11 @@
             "video_number": 71,
             "topic": "Central Bank Moves and Billionaire Debt Hacking",
             "category": "Wealth Psychology & Dark Banking Secrets"
+        },
+        {
+            "video_number": 72,
+            "topic": "Billionaire Lessons from Central Bank Moves",
+            "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
         }
     ]
 }
