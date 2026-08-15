@@ -90,14 +90,9 @@
             "ceo_feedback": "Approved due to high relevance and urgency of the topic, aligning with current economic trends and potential for high RPM. Lack of recent topics also makes this a non-repetitive and fresh concept."
         }
     ],
-    "category_index": 2,
-    "total_videos": 72,
+    "category_index": 3,
+    "total_videos": 73,
     "topic_history": [
-        {
-            "video_number": 48,
-            "topic": "Palantir's 30% Stock Rally and Billionaire Wealth Creation",
-            "category": "Crypto, AI Tech & Digital Wealth Creation"
-        },
         {
             "video_number": 49,
             "topic": "Frugal Millionaires and Practical Money Habits",
@@ -217,6 +212,11 @@
             "video_number": 72,
             "topic": "Billionaire Lessons from Central Bank Moves",
             "category": "Billionaire & Trillionaire Lessons (Buffett, Musk, Rockefeller)"
+        },
+        {
+            "video_number": 73,
+            "topic": "Save vs. Don't Save Experiments: Compound Interest & Asset Math",
+            "category": "Save vs. Don't Save Experiments (Compound Interest & Asset Math)"
         }
     ]
 }
